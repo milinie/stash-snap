@@ -384,9 +384,11 @@ export default function App() {
         )}
 
         {activeTab === "shop" && (
-          <div>
-            <h2>Shop Match 🛍</h2>
-            <p style={{ color: "#999", fontFamily: "sans-serif" }}>Help customers complete their bundles from your shop.</p>
+  <div>
+    <h2>Shop Your Perfect Match 🛍️</h2>
+    <p style={{ color: "#999", fontFamily: "sans-serif" }}>
+      Find the fabrics that pair beautifully with what you already have.
+    </p>
 
             <div style={shopBoxStyle}>
               <div style={{ fontSize: 40 }}>🧵</div>
