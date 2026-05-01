@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+mport { useEffect, useMemo, useState } from "react";
 
 const PALETTE = {
   cream: "#FAF6F0",
@@ -269,6 +269,9 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(null);
 
+const [designWall, setDesignWall] = useState([]);
+const [bundleFilter, setBundleFilter] = useState(null);
+
   useEffect(() => {
     document.body.style.margin = "0";
     document.body.style.background = PALETTE.cream;
@@ -385,38 +388,122 @@ export default function App() {
           </>
         )}
 
-        {activeTab === "bundles" && (
-          <div>
-            <h2>Build Your Bundle 🎨</h2>
-            <p style={{ color: "#999", fontFamily: "sans-serif" }}>
-              You already have a great start. Here’s what you have — and what to add to create a balanced, beautiful bundle.
-            </p>
+{activeTab === "bundles" && (
+  <div>
+    <h2>Build Your Bundle 🎨</h2>
+    <p style={{ color: "#999", fontFamily: "sans-serif" }}>
+      Select fabrics from your stash and preview how they work together.
+    </p>
 
-            {stash.map((item) => {
-              const addColors = (BUNDLE_SUGGESTIONS[item.color] || ["Cream", "Sage", "Cloud", "Honey"]).slice(0, 4);
+    {/* DESIGN WALL */}
+    {designWall.length > 0 && (
+      <div style={{
+        background: "white",
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        boxShadow: "0 2px 10px rgba(44,44,44,0.06)"
+      }}>
+        <h3 style={{ marginBottom: 10 }}>Design Wall</h3>
 
-              return (
-                <div key={item.id} style={cardStyle}>
-                  <div style={{ padding: 16 }}>
-                    <strong>{item.name}</strong>
-                    <p style={{ fontFamily: "sans-serif", color: "#999" }}>
-                      You have: {item.color} · {item.style} · {item.yardage} yds
-                    </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {designWall.map((item) => (
+            <div key={item.id} style={{ position: "relative" }}>
+              <FabricThumb {...item} size={70} />
+              <button
+                onClick={() =>
+                  setDesignWall(prev => prev.filter(f => f.id !== item.id))
+                }
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: "white",
+                  borderRadius: "50%",
+                  border: "1px solid #ddd",
+                  cursor: "pointer"
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
 
-                    <p style={smallHeadingStyle}>Add these to complete the look</p>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {addColors.map((color) => (
-                        <span key={color} style={tagStyle(PALETTE.mist, PALETTE.teal)}>
-                          ➕ {color}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        <button
+          onClick={() => setDesignWall([])}
+          style={{
+            marginTop: 10,
+            background: "none",
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            padding: "6px 12px"
+          }}
+        >
+          Clear Wall
+        </button>
+      </div>
+    )}
+
+    {/* FILTERS */}
+    <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16 }}>
+      <button onClick={() => setBundleFilter(null)} style={pillStyle(!bundleFilter, PALETTE.teal)}>
+        All
+      </button>
+
+      {STYLE_TAGS.map((style) => (
+        <button
+          key={style}
+          onClick={() =>
+            setBundleFilter(bundleFilter === style ? null : style)
+          }
+          style={pillStyle(bundleFilter === style, PALETTE.rose)}
+        >
+          {style}
+        </button>
+      ))}
+    </div>
+
+    {/* FABRIC LIST */}
+    {stash
+      .filter(item => !bundleFilter || item.style === bundleFilter)
+      .map((item) => (
+        <div key={item.id} style={cardStyle}>
+          <div style={{ display: "flex", padding: 12 }}>
+            <FabricThumb {...item} />
+
+            <div style={{ marginLeft: 12, flex: 1 }}>
+              <strong>{item.name}</strong>
+              <p style={{ fontSize: 12, color: "#999" }}>
+                {item.color} · {item.yardage} yds
+              </p>
+
+              <button
+                onClick={() =>
+                  setDesignWall(prev =>
+                    prev.find(f => f.id === item.id)
+                      ? prev
+                      : [...prev, item]
+                  )
+                }
+                style={{
+                  background: PALETTE.teal,
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  cursor: "pointer"
+                }}
+              >
+                Add to Wall
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      ))}
+  </div>
+)}
 
         {activeTab === "shop" && (
           <div>
