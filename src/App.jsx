@@ -294,6 +294,13 @@ function analyzeBundle(designWall) {
   return missing;
 }
 
+function mapMissingToFilter(m) {
+  if (m === "Blender") return "Blender";
+  if (m === "Focal Print") return "Floral";
+  if (m === "Solid or Stripe") return "Solid";
+  return null;
+}
+
 export default function App() {
   const [stash, setStash] = useState(() => {
     const saved = localStorage.getItem("stash-snap-data");
@@ -516,24 +523,59 @@ const missing = analyzeBundle(designWall);
             <p style={smallHeadingStyle}>To improve this bundle</p>
 
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {missing.map((m) => (
-                <span
-                  key={m}
-                  style={{
-                    background: "#fff4df",
-                    padding: "4px 10px",
-                    borderRadius: 99,
-                    fontSize: 12,
-                    fontFamily: "sans-serif",
-                  }}
-                >
-                  ➕ {m}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+       {missing.map((m) => (
+  <div
+    key={m}
+    style={{
+      background: "#fff4df",
+      padding: "8px 12px",
+      borderRadius: 10,
+      fontSize: 12,
+      fontFamily: "sans-serif",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 8,
+    }}
+  >
+    <span>➕ {m}</span>
 
+    <div style={{ display: "flex", gap: 6 }}>
+      <button
+        onClick={() => {
+  const filter = mapMissingToFilter(m);
+  if (filter) setBundleFilter(filter);
+}}
+        style={{
+          fontSize: 11,
+          padding: "4px 8px",
+          borderRadius: 6,
+          border: "1px solid #ddd",
+          background: "white",
+          cursor: "pointer",
+        }}
+      >
+        Find in Stash
+      </button>
+
+      <a
+        href={`https://craftingdreamsfabric.com/search?q=${m}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          fontSize: 11,
+          padding: "4px 8px",
+          borderRadius: 6,
+          background: "#4A7C6F",
+          color: "white",
+          textDecoration: "none",
+        }}
+      >
+        Shop →
+      </a>
+    </div>
+  </div>
+))}
         <button
           onClick={() => setDesignWall([])}
           style={{
