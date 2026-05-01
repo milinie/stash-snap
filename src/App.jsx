@@ -461,60 +461,28 @@ const missing = analyzeBundle(designWall);
     </button>
 
     {designWall.length > 0 && (
-      <div
-        style={{
-          background: "white",
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 16,
-          boxShadow: "0 2px 10px rgba(44,44,44,0.06)",
-        }}
-      >
+      <div style={designWallBoxStyle}>
         <h3 style={{ marginBottom: 10 }}>Design Wall</h3>
 
         <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", marginTop: 0 }}>
           Tip: A balanced bundle usually includes a focal print, a blender, a light fabric, and a contrast color.
         </p>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
-            gap: 8,
-          }}
-        >
+        <div style={designWallGridStyle}>
           {designWall.map((item) => (
             <div key={item.id} style={{ position: "relative" }}>
               <FabricThumb {...item} size={70} />
-
               <button
-                onClick={() =>
-                  setDesignWall((prev) => prev.filter((f) => f.id !== item.id))
-                }
-                style={{
-                  position: "absolute",
-                  top: -6,
-                  right: -6,
-                  background: "white",
-                  borderRadius: "50%",
-                  border: "1px solid #ddd",
-                  cursor: "pointer",
-                }}
+                onClick={() => setDesignWall((prev) => prev.filter((f) => f.id !== item.id))}
+                style={wallRemoveButtonStyle}
               >
-                ✕
+                ×
               </button>
             </div>
           ))}
         </div>
 
-        <p
-          style={{
-            fontSize: 13,
-            fontFamily: "sans-serif",
-            color: "#777",
-            marginTop: 10,
-          }}
-        >
+        <p style={{ fontSize: 13, fontFamily: "sans-serif", color: "#777", marginTop: 10 }}>
           ✨ This bundle works best when it mixes a focal print, a soft blender, a light neutral, and a contrast color for balance.
         </p>
 
@@ -522,60 +490,37 @@ const missing = analyzeBundle(designWall);
           <div style={{ marginTop: 10 }}>
             <p style={smallHeadingStyle}>To improve this bundle</p>
 
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-       {missing.map((m) => (
-  <div
-    key={m}
-    style={{
-      background: "#fff4df",
-      padding: "8px 12px",
-      borderRadius: 10,
-      fontSize: 12,
-      fontFamily: "sans-serif",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: 8,
-    }}
-  >
-    <span>➕ {m}</span>
+            <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
+              {missing.map((m) => (
+                <div key={m} style={missingItemStyle}>
+                  <span>➕ {m}</span>
 
-    <div style={{ display: "flex", gap: 6 }}>
-      <button
-        onClick={() => {
-  const filter = mapMissingToFilter(m);
-  if (filter) setBundleFilter(filter);
-}}
-        style={{
-          fontSize: 11,
-          padding: "4px 8px",
-          borderRadius: 6,
-          border: "1px solid #ddd",
-          background: "white",
-          cursor: "pointer",
-        }}
-      >
-        Find in Stash
-      </button>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      onClick={() => {
+                        const filter = mapMissingToFilter(m);
+                        if (filter) setBundleFilter(filter);
+                      }}
+                      style={miniButtonStyle}
+                    >
+                      Find in Stash
+                    </button>
 
-      <a
-        href={`https://craftingdreamsfabric.com/search?q=${m}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          fontSize: 11,
-          padding: "4px 8px",
-          borderRadius: 6,
-          background: "#4A7C6F",
-          color: "white",
-          textDecoration: "none",
-        }}
-      >
-        Shop →
-      </a>
-    </div>
-  </div>
-))}
+                    <a
+                      href={`https://craftingdreamsfabric.com/search?q=${encodeURIComponent(m)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={miniShopButtonStyle}
+                    >
+                      Shop →
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
           onClick={() => setDesignWall([])}
           style={{
@@ -903,4 +848,58 @@ const toastStyle = {
   fontSize: 14,
   fontFamily: "sans-serif",
   zIndex: 200,
+};
+
+const designWallBoxStyle = {
+  background: "white",
+  borderRadius: 16,
+  padding: 16,
+  marginBottom: 16,
+  boxShadow: "0 2px 10px rgba(44,44,44,0.06)",
+};
+
+const designWallGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
+  gap: 8,
+};
+
+const wallRemoveButtonStyle = {
+  position: "absolute",
+  top: -6,
+  right: -6,
+  background: "white",
+  borderRadius: "50%",
+  border: "1px solid #ddd",
+  cursor: "pointer",
+};
+
+const missingItemStyle = {
+  background: "#fff4df",
+  padding: "8px 12px",
+  borderRadius: 10,
+  fontSize: 12,
+  fontFamily: "sans-serif",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 8,
+};
+
+const miniButtonStyle = {
+  fontSize: 11,
+  padding: "4px 8px",
+  borderRadius: 6,
+  border: "1px solid #ddd",
+  background: "white",
+  cursor: "pointer",
+};
+
+const miniShopButtonStyle = {
+  fontSize: 11,
+  padding: "4px 8px",
+  borderRadius: 6,
+  background: "#4A7C6F",
+  color: "white",
+  textDecoration: "none",
 };
