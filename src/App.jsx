@@ -572,3 +572,30 @@ const addWallButtonStyle = { background: PALETTE.teal, color: "white", border: "
 const missingItemStyle = { background: "#fff4df", padding: "8px 12px", borderRadius: 10, fontSize: 12, fontFamily: "sans-serif", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 };
 const miniButtonStyle = { fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid #ddd", background: "white", cursor: "pointer" };
 const miniShopButtonStyle = { fontSize: 11, padding: "4px 8px", borderRadius: 6, background: "#4A7C6F", color: "white", textDecoration: "none" };
+<button
+  onClick={() => {
+    const bundleName = `Bundle ${new Date().toLocaleTimeString()}`;
+    const saved = JSON.parse(localStorage.getItem("saved-bundles") || "[]");
+
+    const newBundle = {
+      id: Date.now(),
+      name: bundleName,
+      fabrics: designWall,
+    };
+
+    localStorage.setItem("saved-bundles", JSON.stringify([newBundle, ...saved]));
+    showToast("✨ Bundle saved!");
+  }}
+  style={{
+    marginTop: 12,
+    background: PALETTE.rose,
+    color: "white",
+    border: "none",
+    borderRadius: 8,
+    padding: "10px 14px",
+    fontSize: 13,
+    cursor: "pointer",
+  }}
+>
+  💾 Save This Bundle
+</button>
