@@ -277,6 +277,24 @@ function autoBuildBundle(stash) {
   return bundle.slice(0, 5);
 }
 
+function analyzeBundle(designWall) {
+  const styles = designWall.map(f => f.style);
+  const colors = designWall.map(f => f.color);
+
+  const missing = [];
+
+  if (!styles.includes("Floral")) missing.push("Focal Print");
+  if (!styles.includes("Blender")) missing.push("Blender");
+  if (!styles.includes("Solid") && !styles.includes("Stripe"))
+    missing.push("Solid or Stripe");
+  if (!colors.some(c => ["Cream", "Cloud", "Blush"].includes(c)))
+    missing.push("Light Neutral");
+  if (!colors.some(c => ["Honey", "Teal", "Navy", "Rose", "Sage"].includes(c)))
+    missing.push("Contrast Color");
+
+  return missing;
+}
+
 export default function App() {
   const [stash, setStash] = useState(() => {
     const saved = localStorage.getItem("stash-snap-data");
@@ -303,6 +321,8 @@ const [bundleFilter, setBundleFilter] = useState(null);
 
   const totalYards = useMemo(() => stash.reduce((sum, item) => sum + item.yardage, 0), [stash]);
   const collections = useMemo(() => [...new Set(stash.map((item) => item.collection))], [stash]);
+
+const missing = analyzeBundle(designWall);
 
   const filtered = stash.filter((item) => {
     const searchText = search.toLowerCase();
@@ -489,6 +509,55 @@ gap: 8, }}>
             borderRadius: 8,
             padding: "6px 12px"
           }}
+
+</div>
+
+<p style={{
+  fontSize: 13,
+  fontFamily: "sans-serif",
+  color: "#777",
+  marginTop: 10
+}}>
+  ✨ This bundle works because it mixes a focal print, a soft blender, and a light neutral with a contrast color for balance.
+</p>
+
+</div>
+
+<p style={{
+  fontSize: 13,
+  fontFamily: "sans-serif",
+  color: "#777",
+  marginTop: 10
+}}>
+  ✨ This bundle works because it mixes a focal print, a soft blender, and a light neutral with a contrast color for balance.
+</p>
+
+{missing.length > 0 && (
+  <div style={{ marginTop: 10 }}>
+    <p style={smallHeadingStyle}>To improve this bundle</p>
+
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      {missing.map((m) => (
+        <span
+          key={m}
+          style={{
+            background: "#fff4df",
+            padding: "4px 10px",
+            borderRadius: 99,
+            fontSize: 12,
+            fontFamily: "sans-serif",
+          }}
+        >
+          ➕ {m}
+        </span>
+      ))}
+    </div>
+  </div>
+)}
+
+<button
+  onClick={() => setDesignWall([])}
+
         >
           Clear Wall
         </button>
