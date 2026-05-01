@@ -274,7 +274,7 @@ function AddModal({ onSave, onClose }) {
           borderRadius: "24px 24px 0 0",
           padding: "28px 24px 40px",
           width: "100%",
-          maxWidth: "480px",
+          maxWidth: "100%",
           maxHeight: "90vh",
           overflowY: "auto",
           fontFamily: "Georgia, serif",
@@ -627,7 +627,7 @@ export default function App() {
           overflow: "hidden",
         }}
       >
-        <div style={{ maxWidth: 480, margin: "0 auto", position: "relative" }}>
+        <div style={{ maxWidth: 100%, margin: "0 auto", position: "relative" }}>
           <p
             style={{
               color: "rgba(255,255,255,0.6)",
@@ -701,7 +701,7 @@ export default function App() {
           borderBottom: `1px solid ${PALETTE.blush}`,
         }}
       >
-        <div style={{ display: "flex", maxWidth: 480, margin: "0 auto" }}>
+        <div style={{ display: "flex", maxWidth: 100%, margin: "0 auto" }}>
           {[
             ["stash", "My Stash"],
             ["bundles", "Bundle Match"],
@@ -732,7 +732,7 @@ export default function App() {
 
       <main
         style={{
-          maxWidth: 480,
+          maxWidth: 100%,
           margin: "0 auto",
           padding: "20px 16px 110px",
         }}
