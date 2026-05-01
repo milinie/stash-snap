@@ -258,6 +258,25 @@ function FabricCard({ item, onDelete }) {
   );
 }
 
+function autoBuildBundle(stash) {
+  const floral = stash.find((item) => item.style === "Floral");
+  const blender = stash.find((item) => item.style === "Blender");
+  const solid = stash.find((item) => item.style === "Solid");
+  const stripe = stash.find((item) => item.style === "Stripe");
+  const light = stash.find((item) =>
+    ["Cream", "Cloud", "Blush"].includes(item.color)
+  );
+  const contrast = stash.find((item) =>
+    ["Honey", "Teal", "Navy", "Sage", "Rose"].includes(item.color)
+  );
+
+  const bundle = [floral, blender, solid || stripe, light, contrast]
+    .filter(Boolean)
+    .filter((item, index, array) => array.findIndex((i) => i.id === item.id) === index);
+
+  return bundle.slice(0, 5);
+}
+
 export default function App() {
   const [stash, setStash] = useState(() => {
     const saved = localStorage.getItem("stash-snap-data");
@@ -391,10 +410,29 @@ const [bundleFilter, setBundleFilter] = useState(null);
 
 {activeTab === "bundles" && (
   <div>
-    <h2>Build Your Bundle 🎨</h2>
-    <p style={{ color: "#999", fontFamily: "sans-serif" }}>
-      Select fabrics from your stash and preview how they work together.
-    </p>
+
+<h2>Build Your Bundle 🎨</h2>
+<p style={{ color: "#999", fontFamily: "sans-serif" }}>
+  Tap fabrics to add them to your design wall, or let Stash Snap suggest a balanced bundle from what you already have.
+</p>
+
+<button
+  onClick={() => setDesignWall(autoBuildBundle(stash))}
+  style={{
+    background: PALETTE.teal,
+    color: "white",
+    border: "none",
+    borderRadius: 50,
+    padding: "12px 18px",
+    fontSize: 14,
+    fontFamily: "sans-serif",
+    fontWeight: 700,
+    marginBottom: 16,
+    boxShadow: "0 4px 14px rgba(74,124,111,0.25)",
+  }}
+>
+  ✨ Auto Build Bundle
+</button>
 
     {/* DESIGN WALL */}
 
@@ -411,6 +449,10 @@ const [bundleFilter, setBundleFilter] = useState(null);
         boxShadow: "0 2px 10px rgba(44,44,44,0.06)"
       }}>
         <h3 style={{ marginBottom: 10 }}>Design Wall</h3>
+
+<p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", marginTop: 0 }}>
+  Tip: A balanced bundle usually includes a focal print, a blender, a light fabric, and a contrast color.
+</p>
 
         <div style={{ display: "grid",
 gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
