@@ -31,6 +31,8 @@ const BUNDLE_SUGGESTIONS = {
   Lavender: ["Blush", "Cloud", "Cream", "Sage"],
   Navy: ["Cream", "Rose", "Honey", "Cloud"],
   Blush: ["Sage", "Lavender", "Cream", "Cloud"],
+  Cloud: ["Rose", "Sage", "Cream", "Honey"],
+  Cream: ["Rose", "Sage", "Honey", "Cloud"],
 };
 
 function getColorHex(color) {
@@ -131,7 +133,7 @@ function AddModal({ onSave, onClose }) {
         </div>
 
         <label style={labelStyle}>Fabric Photo</label>
-     <input type="file" accept="image/*" onChange={handlePhoto} style={{ marginBottom: 16 }} />
+        <input type="file" accept="image/*" onChange={handlePhoto} style={{ marginBottom: 16 }} />
 
         {form.photo && (
           <div style={{ borderRadius: 14, overflow: "hidden", width: 96, height: 96, marginBottom: 16 }}>
@@ -196,7 +198,7 @@ function AddModal({ onSave, onClose }) {
 
 function FabricCard({ item, onDelete }) {
   const [expanded, setExpanded] = useState(false);
-  const pairings = BUNDLE_SUGGESTIONS[item.color] || ["Cream", "Sage", "Cloud"];
+  const pairings = (BUNDLE_SUGGESTIONS[item.color] || ["Cream", "Sage", "Cloud", "Honey"]).slice(0, 4);
 
   return (
     <div style={cardStyle}>
@@ -218,8 +220,8 @@ function FabricCard({ item, onDelete }) {
           </div>
 
           <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
-            <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>{item.color}</span>
-            <span style={tagStyle(PALETTE.mist, PALETTE.teal)}>{item.style}</span>
+            <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>✔ {item.color}</span>
+            <span style={tagStyle(PALETTE.mist, PALETTE.teal)}>✔ {item.style}</span>
           </div>
         </div>
       </div>
@@ -230,12 +232,18 @@ function FabricCard({ item, onDelete }) {
             {item.notes || "No notes added"}
           </p>
 
-          <p style={smallHeadingStyle}>Pairs well with</p>
+          <p style={smallHeadingStyle}>You already have</p>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+            <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>✔ {item.color}</span>
+            <span style={tagStyle(PALETTE.mist, PALETTE.teal)}>✔ {item.style}</span>
+            <span style={tagStyle("#fff4df", PALETTE.honey)}>✔ {item.yardage} yds</span>
+          </div>
 
+          <p style={smallHeadingStyle}>Add these to complete the look</p>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {pairings.map((color) => (
               <span key={color} style={{ background: PALETTE.mist, padding: "3px 10px", borderRadius: 99, fontSize: 12, fontFamily: "sans-serif" }}>
-                🎨 {color}
+                ➕ {color}
               </span>
             ))}
           </div>
@@ -274,26 +282,22 @@ export default function App() {
   const collections = useMemo(() => [...new Set(stash.map((item) => item.collection))], [stash]);
 
   const filtered = stash.filter((item) => {
+    const searchText = search.toLowerCase();
+
+    const searchableItem = [
+      item.name,
+      item.color,
+      item.style,
+      item.collection,
+      item.notes,
+      String(item.yardage),
+    ]
+      .join(" ")
+      .toLowerCase();
+
     if (filterStyle && item.style !== filterStyle) return false;
-    const filtered = stash.filter((item) => {
-  const searchText = search.toLowerCase();
+    if (search && !searchableItem.includes(searchText)) return false;
 
-  const searchableItem = [
-    item.name,
-    item.color,
-    item.style,
-    item.collection,
-    item.notes,
-    String(item.yardage),
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  if (filterStyle && item.style !== filterStyle) return false;
-  if (search && !searchableItem.includes(searchText)) return false;
-
-  return true;
-});
     return true;
   });
 
@@ -348,7 +352,7 @@ export default function App() {
         <div style={contentWrapNoPadding}>
           {[
             ["stash", "My Stash"],
-            ["bundles", "Bundle Match"],
+            ["bundles", "Build Bundle"],
             ["shop", "Shop Match"],
           ].map(([id, label]) => (
             <button key={id} onClick={() => setActiveTab(id)} style={tabStyle(activeTab === id)}>
@@ -383,46 +387,59 @@ export default function App() {
 
         {activeTab === "bundles" && (
           <div>
-            <h2>Bundle Match Engine 🎨</h2>
-            <p style={{ color: "#999", fontFamily: "sans-serif" }}>See which fabrics in your stash work beautifully together.</p>
-            {stash.map((item) => (
-              <div key={item.id} style={cardStyle}>
-                <div style={{ padding: 16 }}>
-                  <strong>{item.name}</strong>
-                  <p style={{ fontFamily: "sans-serif", color: "#999" }}>{item.color} · {item.yardage} yds</p>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    {(BUNDLE_SUGGESTIONS[item.color] || ["Cream", "Sage", "Cloud", "Honey"]).map((color) => (
-                      <span key={color} style={tagStyle(PALETTE.mist, PALETTE.teal)}>🎨 {color}</span>
-                    ))}
+            <h2>Build Your Bundle 🎨</h2>
+            <p style={{ color: "#999", fontFamily: "sans-serif" }}>
+              You already have a great start. Here’s what you have — and what to add to create a balanced, beautiful bundle.
+            </p>
+
+            {stash.map((item) => {
+              const addColors = (BUNDLE_SUGGESTIONS[item.color] || ["Cream", "Sage", "Cloud", "Honey"]).slice(0, 4);
+
+              return (
+                <div key={item.id} style={cardStyle}>
+                  <div style={{ padding: 16 }}>
+                    <strong>{item.name}</strong>
+                    <p style={{ fontFamily: "sans-serif", color: "#999" }}>
+                      You have: {item.color} · {item.style} · {item.yardage} yds
+                    </p>
+
+                    <p style={smallHeadingStyle}>Add these to complete the look</p>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {addColors.map((color) => (
+                        <span key={color} style={tagStyle(PALETTE.mist, PALETTE.teal)}>
+                          ➕ {color}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {activeTab === "shop" && (
-  <div>
-    <h2>Shop Your Perfect Match 🛍️</h2>
-    <p style={{ color: "#999", fontFamily: "sans-serif" }}>
-      Find the fabrics that pair beautifully with what you already have.
-    </p>
+          <div>
+            <h2>Shop Your Perfect Match 🛍️</h2>
+            <p style={{ color: "#999", fontFamily: "sans-serif" }}>
+              Find the fabrics that pair beautifully with what you already have.
+            </p>
 
             <div style={shopBoxStyle}>
               <div style={{ fontSize: 40 }}>🧵</div>
-              <h3>Complete Your Bundle</h3>
+              <h3>Complete Your Quilt</h3>
               <p style={{ fontFamily: "sans-serif", color: "#777" }}>
-                Based on your stash, you may only need a few more fabrics to finish your next quilt.
+                You’re closer than you think. Shop fabrics that can help round out your bundle and bring your quilt together.
               </p>
               <a href="https://craftingdreamsfabric.com" target="_blank" rel="noopener noreferrer" style={shopButtonStyle}>
-                Visit the Shop →
+                Shop Matching Fabrics →
               </a>
             </div>
           </div>
         )}
       </main>
 
-      <button onClick={() => setAdding(true)} style={floatingButtonStyle}>📸 Add Fabric</button>
+      <button onClick={() => setAdding(true)} style={floatingButtonStyle}>＋ Add Fabric</button>
 
       {adding && <AddModal onSave={handleSave} onClose={() => setAdding(false)} />}
 
@@ -502,6 +519,7 @@ const cardStyle = {
   borderRadius: 16,
   overflow: "hidden",
   boxShadow: "0 2px 12px rgba(44,44,44,0.07)",
+  marginBottom: 12,
 };
 
 const modalOverlay = {
