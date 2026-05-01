@@ -60,56 +60,32 @@ function FabricThumb({ color, style, photo, size = 76 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48">
       <rect width="48" height="48" fill={bg} />
-
+      {(style === "Solid" || style === "Vintage") && <rect x="8" y="8" width="32" height="32" fill="white" opacity="0.12" rx="2" />}
+      {style === "Stripe" && [4, 12, 20, 28, 36, 44].map((x) => <rect key={x} x={x - 2} y="0" width="4" height="48" fill="white" opacity="0.25" />)}
+      {style === "Blender" && Array.from({ length: 20 }).map((_, i) => <circle key={i} cx={Math.sin(i * 2.3) * 18 + 24} cy={Math.cos(i * 1.7) * 18 + 24} r="2" fill="white" opacity="0.22" />)}
       {style === "Floral" &&
         [{ x: 12, y: 12 }, { x: 36, y: 12 }, { x: 24, y: 30 }, { x: 8, y: 38 }, { x: 40, y: 38 }].map((p, i) => (
           <g key={i} transform={`translate(${p.x},${p.y})`}>
-            {[0, 60, 120, 180, 240, 300].map((a) => (
-              <ellipse key={a} rx="3.5" ry="1.5" transform={`rotate(${a})`} fill="white" opacity="0.6" />
-            ))}
+            {[0, 60, 120, 180, 240, 300].map((a) => <ellipse key={a} rx="3.5" ry="1.5" transform={`rotate(${a})`} fill="white" opacity="0.6" />)}
             <circle r="2" fill="white" opacity="0.8" />
           </g>
         ))}
-
-      {style === "Geometric" &&
-        [0, 1, 2, 3].map((row) =>
-          [0, 1, 2, 3].map((col) => (
-            <polygon
-              key={`${row}-${col}`}
-              points={`${col * 12 + 6},${row * 12 + 2} ${col * 12 + 10},${row * 12 + 10} ${col * 12 + 2},${row * 12 + 10}`}
-              fill="white"
-              opacity="0.25"
-            />
-          ))
-        )}
-
-      {style === "Stripe" &&
-        [4, 12, 20, 28, 36, 44].map((x) => (
-          <rect key={x} x={x - 2} y="0" width="4" height="48" fill="white" opacity="0.25" />
-        ))}
-
-      {style === "Blender" &&
-        Array.from({ length: 20 }).map((_, i) => (
-          <circle key={i} cx={Math.sin(i * 2.3) * 18 + 24} cy={Math.cos(i * 1.7) * 18 + 24} r="2" fill="white" opacity="0.22" />
-        ))}
-
-      {(style === "Solid" || style === "Vintage") && (
-        <rect x="8" y="8" width="32" height="32" fill="white" opacity="0.12" rx="2" />
-      )}
     </svg>
   );
 }
 
-function AddModal({ onSave, onClose }) {
-  const [form, setForm] = useState({
-    name: "",
-    color: "Rose",
-    style: "Floral",
-    yardage: "",
-    collection: "My Stash",
-    notes: "",
-    photo: null,
-  });
+function AddModal({ onSave, onClose, initialData }) {
+  const [form, setForm] = useState(
+    initialData || {
+      name: "",
+      color: "Rose",
+      style: "Floral",
+      yardage: "",
+      collection: "My Stash",
+      notes: "",
+      photo: null,
+    }
+  );
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -128,7 +104,7 @@ function AddModal({ onSave, onClose }) {
     <div style={modalOverlay}>
       <div style={modalBox}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-          <h2 style={{ margin: 0, color: PALETTE.ink }}>Add Fabric</h2>
+          <h2 style={{ margin: 0, color: PALETTE.ink }}>{initialData ? "Edit Fabric" : "Add Fabric"}</h2>
           <button onClick={onClose} style={closeButton}>×</button>
         </div>
 
@@ -167,9 +143,7 @@ function AddModal({ onSave, onClose }) {
 
         <label style={labelStyle}>Collection</label>
         <select value={form.collection} onChange={(e) => update("collection", e.target.value)} style={inputStyle}>
-          {COLLECTIONS.map((collection) => (
-            <option key={collection}>{collection}</option>
-          ))}
+          {COLLECTIONS.map((collection) => <option key={collection}>{collection}</option>)}
         </select>
 
         <label style={labelStyle}>Notes</label>
@@ -177,7 +151,13 @@ function AddModal({ onSave, onClose }) {
 
         <button
           disabled={!canSave}
-          onClick={() => onSave({ ...form, yardage: parseFloat(form.yardage) || 0 })}
+          onClick={() =>
+            onSave({
+              ...form,
+              id: form.id || Date.now(),
+              yardage: parseFloat(form.yardage) || 0,
+            })
+          }
           style={{
             width: "100%",
             border: "none",
@@ -189,14 +169,14 @@ function AddModal({ onSave, onClose }) {
             opacity: canSave ? 1 : 0.5,
           }}
         >
-          Save to Stash 🧵
+          {initialData ? "Save Changes ✏️" : "Save to Stash 🧵"}
         </button>
       </div>
     </div>
   );
 }
 
-function FabricCard({ item, onDelete }) {
+function FabricCard({ item, onDelete, onEdit }) {
   const [expanded, setExpanded] = useState(false);
   const pairings = (BUNDLE_SUGGESTIONS[item.color] || ["Cream", "Sage", "Cloud", "Honey"]).slice(0, 4);
 
@@ -208,16 +188,10 @@ function FabricCard({ item, onDelete }) {
         </div>
 
         <div style={{ padding: "12px 14px", flex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <h3 style={{ fontSize: 16, color: PALETTE.ink, margin: "0 0 4px" }}>{item.name}</h3>
-            <span style={{ fontSize: 11, color: "#bbb", fontFamily: "sans-serif" }}>{item.date}</span>
-          </div>
-
-          <div style={{ display: "flex", gap: 6, alignItems: "center", fontFamily: "sans-serif" }}>
-            <strong style={{ fontSize: 12, color: PALETTE.teal }}>{item.yardage} yds</strong>
-            <span style={{ color: "#ddd" }}>·</span>
-            <span style={{ fontSize: 12, color: "#999" }}>{item.collection}</span>
-          </div>
+          <h3 style={{ fontSize: 16, color: PALETTE.ink, margin: "0 0 4px" }}>{item.name}</h3>
+          <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", margin: 0 }}>
+            {item.yardage} yds · {item.collection}
+          </p>
 
           <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
             <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>✔ {item.color}</span>
@@ -232,13 +206,6 @@ function FabricCard({ item, onDelete }) {
             {item.notes || "No notes added"}
           </p>
 
-          <p style={smallHeadingStyle}>You already have</p>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
-            <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>✔ {item.color}</span>
-            <span style={tagStyle(PALETTE.mist, PALETTE.teal)}>✔ {item.style}</span>
-            <span style={tagStyle("#fff4df", PALETTE.honey)}>✔ {item.yardage} yds</span>
-          </div>
-
           <p style={smallHeadingStyle}>Add these to complete the look</p>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {pairings.map((color) => (
@@ -248,9 +215,8 @@ function FabricCard({ item, onDelete }) {
             ))}
           </div>
 
-          <button onClick={() => onDelete(item.id)} style={removeButton}>
-            Remove from stash
-          </button>
+          <button onClick={() => onEdit(item)} style={editButtonStyle}>Edit ✏️</button>
+          <button onClick={() => onDelete(item.id)} style={removeButton}>Remove</button>
         </div>
       )}
     </div>
@@ -262,34 +228,25 @@ function autoBuildBundle(stash) {
   const blender = stash.find((item) => item.style === "Blender");
   const solid = stash.find((item) => item.style === "Solid");
   const stripe = stash.find((item) => item.style === "Stripe");
-  const light = stash.find((item) =>
-    ["Cream", "Cloud", "Blush"].includes(item.color)
-  );
-  const contrast = stash.find((item) =>
-    ["Honey", "Teal", "Navy", "Sage", "Rose"].includes(item.color)
-  );
+  const light = stash.find((item) => ["Cream", "Cloud", "Blush"].includes(item.color));
+  const contrast = stash.find((item) => ["Honey", "Teal", "Navy", "Sage", "Rose"].includes(item.color));
 
-  const bundle = [floral, blender, solid || stripe, light, contrast]
+  return [floral, blender, solid || stripe, light, contrast]
     .filter(Boolean)
-    .filter((item, index, array) => array.findIndex((i) => i.id === item.id) === index);
-
-  return bundle.slice(0, 5);
+    .filter((item, index, array) => array.findIndex((i) => i.id === item.id) === index)
+    .slice(0, 5);
 }
 
 function analyzeBundle(designWall) {
-  const styles = designWall.map(f => f.style);
-  const colors = designWall.map(f => f.color);
-
+  const styles = designWall.map((f) => f.style);
+  const colors = designWall.map((f) => f.color);
   const missing = [];
 
   if (!styles.includes("Floral")) missing.push("Focal Print");
   if (!styles.includes("Blender")) missing.push("Blender");
-  if (!styles.includes("Solid") && !styles.includes("Stripe"))
-    missing.push("Solid or Stripe");
-  if (!colors.some(c => ["Cream", "Cloud", "Blush"].includes(c)))
-    missing.push("Light Neutral");
-  if (!colors.some(c => ["Honey", "Teal", "Navy", "Rose", "Sage"].includes(c)))
-    missing.push("Contrast Color");
+  if (!styles.includes("Solid") && !styles.includes("Stripe")) missing.push("Solid or Stripe");
+  if (!colors.some((c) => ["Cream", "Cloud", "Blush"].includes(c))) missing.push("Light Neutral");
+  if (!colors.some((c) => ["Honey", "Teal", "Navy", "Rose", "Sage"].includes(c))) missing.push("Contrast Color");
 
   return missing;
 }
@@ -309,12 +266,12 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState("stash");
   const [adding, setAdding] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [filterStyle, setFilterStyle] = useState(null);
+  const [bundleFilter, setBundleFilter] = useState(null);
+  const [designWall, setDesignWall] = useState([]);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(null);
-
-const [designWall, setDesignWall] = useState([]);
-const [bundleFilter, setBundleFilter] = useState(null);
 
   useEffect(() => {
     document.body.style.margin = "0";
@@ -327,22 +284,11 @@ const [bundleFilter, setBundleFilter] = useState(null);
 
   const totalYards = useMemo(() => stash.reduce((sum, item) => sum + item.yardage, 0), [stash]);
   const collections = useMemo(() => [...new Set(stash.map((item) => item.collection))], [stash]);
-
-const missing = analyzeBundle(designWall);
+  const missing = analyzeBundle(designWall);
 
   const filtered = stash.filter((item) => {
     const searchText = search.toLowerCase();
-
-    const searchableItem = [
-      item.name,
-      item.color,
-      item.style,
-      item.collection,
-      item.notes,
-      String(item.yardage),
-    ]
-      .join(" ")
-      .toLowerCase();
+    const searchableItem = [item.name, item.color, item.style, item.collection, item.notes, String(item.yardage)].join(" ").toLowerCase();
 
     if (filterStyle && item.style !== filterStyle) return false;
     if (search && !searchableItem.includes(searchText)) return false;
@@ -357,7 +303,6 @@ const missing = analyzeBundle(designWall);
 
   const handleSave = (form) => {
     const newItem = {
-      id: Date.now(),
       ...form,
       date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
     };
@@ -367,8 +312,16 @@ const missing = analyzeBundle(designWall);
     showToast("✅ Added to your stash!");
   };
 
+  const handleUpdate = (updated) => {
+    setStash((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
+    setDesignWall((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
+    setEditingItem(null);
+    showToast("✏️ Fabric updated!");
+  };
+
   const handleDelete = (id) => {
     setStash((prev) => prev.filter((item) => item.id !== id));
+    setDesignWall((prev) => prev.filter((item) => item.id !== id));
     showToast("Removed from stash");
   };
 
@@ -418,7 +371,6 @@ const missing = analyzeBundle(designWall);
 
             <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16 }}>
               <button onClick={() => setFilterStyle(null)} style={pillStyle(!filterStyle, PALETTE.teal)}>All</button>
-
               {["Floral", "Geometric", "Blender", "Vintage", "Solid"].map((style) => (
                 <button key={style} onClick={() => setFilterStyle(filterStyle === style ? null : style)} style={pillStyle(filterStyle === style, PALETTE.rose)}>
                   {style}
@@ -428,168 +380,107 @@ const missing = analyzeBundle(designWall);
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {filtered.map((item) => (
-                <FabricCard key={item.id} item={item} onDelete={handleDelete} />
+                <FabricCard key={item.id} item={item} onDelete={handleDelete} onEdit={setEditingItem} />
               ))}
             </div>
           </>
         )}
 
-{activeTab === "bundles" && (
-  <div>
-    <h2>Build Your Bundle 🎨</h2>
+        {activeTab === "bundles" && (
+          <div>
+            <h2>Build Your Bundle 🎨</h2>
+            <p style={{ color: "#999", fontFamily: "sans-serif" }}>
+              Tap fabrics to add them to your design wall, or let Stash Snap suggest a balanced bundle from what you already have.
+            </p>
 
-    <p style={{ color: "#999", fontFamily: "sans-serif" }}>
-      Tap fabrics to add them to your design wall, or let Stash Snap suggest a balanced bundle from what you already have.
-    </p>
+            <button onClick={() => setDesignWall(autoBuildBundle(stash))} style={autoButtonStyle}>
+              ✨ Auto Build Bundle
+            </button>
 
-    <button
-      onClick={() => setDesignWall(autoBuildBundle(stash))}
-      style={{
-        background: PALETTE.teal,
-        color: "white",
-        border: "none",
-        borderRadius: 50,
-        padding: "12px 18px",
-        fontSize: 14,
-        fontFamily: "sans-serif",
-        fontWeight: 700,
-        marginBottom: 16,
-        boxShadow: "0 4px 14px rgba(74,124,111,0.25)",
-      }}
-    >
-      ✨ Auto Build Bundle
-    </button>
+            {designWall.length > 0 && (
+              <div style={designWallBoxStyle}>
+                <h3 style={{ marginBottom: 10 }}>Design Wall</h3>
 
-    {designWall.length > 0 && (
-      <div style={designWallBoxStyle}>
-        <h3 style={{ marginBottom: 10 }}>Design Wall</h3>
+                <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", marginTop: 0 }}>
+                  Tip: A balanced bundle usually includes a focal print, a blender, a light fabric, and a contrast color.
+                </p>
 
-        <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", marginTop: 0 }}>
-          Tip: A balanced bundle usually includes a focal print, a blender, a light fabric, and a contrast color.
-        </p>
+                <div style={designWallGridStyle}>
+                  {designWall.map((item) => (
+                    <div key={item.id} style={{ position: "relative" }}>
+                      <FabricThumb {...item} size={70} />
+                      <button onClick={() => setDesignWall((prev) => prev.filter((f) => f.id !== item.id))} style={wallRemoveButtonStyle}>×</button>
+                    </div>
+                  ))}
+                </div>
 
-        <div style={designWallGridStyle}>
-          {designWall.map((item) => (
-            <div key={item.id} style={{ position: "relative" }}>
-              <FabricThumb {...item} size={70} />
-              <button
-                onClick={() => setDesignWall((prev) => prev.filter((f) => f.id !== item.id))}
-                style={wallRemoveButtonStyle}
-              >
-                ×
-              </button>
+                {missing.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <p style={smallHeadingStyle}>To improve this bundle</p>
+
+                    <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
+                      {missing.map((m) => (
+                        <div key={m} style={missingItemStyle}>
+                          <span>➕ {m}</span>
+
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button
+                              onClick={() => {
+                                const filter = mapMissingToFilter(m);
+                                if (filter) setBundleFilter(filter);
+                              }}
+                              style={miniButtonStyle}
+                            >
+                              Find in Stash
+                            </button>
+
+                            <a href={`https://craftingdreamsfabric.com/search?q=${encodeURIComponent(m)}`} target="_blank" rel="noopener noreferrer" style={miniShopButtonStyle}>
+                              Shop →
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button onClick={() => setDesignWall([])} style={clearWallButtonStyle}>Clear Wall</button>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16 }}>
+              <button onClick={() => setBundleFilter(null)} style={pillStyle(!bundleFilter, PALETTE.teal)}>All</button>
+
+              {STYLE_TAGS.map((style) => (
+                <button key={style} onClick={() => setBundleFilter(bundleFilter === style ? null : style)} style={pillStyle(bundleFilter === style, PALETTE.rose)}>
+                  {style}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <p style={{ fontSize: 13, fontFamily: "sans-serif", color: "#777", marginTop: 10 }}>
-          ✨ This bundle works best when it mixes a focal print, a soft blender, a light neutral, and a contrast color for balance.
-        </p>
+            {stash
+              .filter((item) => !bundleFilter || item.style === bundleFilter)
+              .map((item) => (
+                <div key={item.id} style={cardStyle}>
+                  <div style={{ display: "flex", padding: 12 }}>
+                    <FabricThumb {...item} />
 
-        {missing.length > 0 && (
-          <div style={{ marginTop: 10 }}>
-            <p style={smallHeadingStyle}>To improve this bundle</p>
+                    <div style={{ marginLeft: 12, flex: 1 }}>
+                      <strong>{item.name}</strong>
+                      <p style={{ fontSize: 12, color: "#999" }}>{item.color} · {item.yardage} yds</p>
 
-            <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
-              {missing.map((m) => (
-                <div key={m} style={missingItemStyle}>
-                  <span>➕ {m}</span>
-
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button
-                      onClick={() => {
-                        const filter = mapMissingToFilter(m);
-                        if (filter) setBundleFilter(filter);
-                      }}
-                      style={miniButtonStyle}
-                    >
-                      Find in Stash
-                    </button>
-
-                    <a
-                      href={`https://craftingdreamsfabric.com/search?q=${encodeURIComponent(m)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={miniShopButtonStyle}
-                    >
-                      Shop →
-                    </a>
+                      <button
+                        onClick={() => setDesignWall((prev) => (prev.find((f) => f.id === item.id) ? prev : [...prev, item]))}
+                        style={addWallButtonStyle}
+                      >
+                        {designWall.find((f) => f.id === item.id) ? "Added ✓" : "Add to Wall"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
-            </div>
           </div>
         )}
-
-        <button
-          onClick={() => setDesignWall([])}
-          style={{
-            marginTop: 12,
-            background: "none",
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            padding: "6px 12px",
-          }}
-        >
-          Clear Wall
-        </button>
-      </div>
-    )}
-
-    <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16 }}>
-      <button onClick={() => setBundleFilter(null)} style={pillStyle(!bundleFilter, PALETTE.teal)}>
-        All
-      </button>
-
-      {STYLE_TAGS.map((style) => (
-        <button
-          key={style}
-          onClick={() => setBundleFilter(bundleFilter === style ? null : style)}
-          style={pillStyle(bundleFilter === style, PALETTE.rose)}
-        >
-          {style}
-        </button>
-      ))}
-    </div>
-
-    {stash
-      .filter((item) => !bundleFilter || item.style === bundleFilter)
-      .map((item) => (
-        <div key={item.id} style={cardStyle}>
-          <div style={{ display: "flex", padding: 12 }}>
-            <FabricThumb {...item} />
-
-            <div style={{ marginLeft: 12, flex: 1 }}>
-              <strong>{item.name}</strong>
-
-              <p style={{ fontSize: 12, color: "#999" }}>
-                {item.color} · {item.yardage} yds
-              </p>
-
-              <button
-                onClick={() =>
-                  setDesignWall((prev) =>
-                    prev.find((f) => f.id === item.id) ? prev : [...prev, item]
-                  )
-                }
-                style={{
-                  background: PALETTE.teal,
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "6px 12px",
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
-              >
-                {designWall.find((f) => f.id === item.id) ? "Added ✓" : "Add to Wall"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
-  </div>
-)}
 
         {activeTab === "shop" && (
           <div>
@@ -616,6 +507,14 @@ const missing = analyzeBundle(designWall);
 
       {adding && <AddModal onSave={handleSave} onClose={() => setAdding(false)} />}
 
+      {editingItem && (
+        <AddModal
+          initialData={editingItem}
+          onSave={handleUpdate}
+          onClose={() => setEditingItem(null)}
+        />
+      )}
+
       {toast && <div style={toastStyle}>{toast}</div>}
     </div>
   );
@@ -623,283 +522,53 @@ const missing = analyzeBundle(designWall);
 
 const APP_WIDTH = 760;
 
-const contentWrap = {
-  width: "100%",
-  maxWidth: APP_WIDTH,
-  margin: "0 auto",
-  paddingLeft: 16,
-  paddingRight: 16,
-  boxSizing: "border-box",
-};
+const contentWrap = { width: "100%", maxWidth: APP_WIDTH, margin: "0 auto", paddingLeft: 16, paddingRight: 16, boxSizing: "border-box" };
+const contentWrapNoPadding = { width: "100%", maxWidth: APP_WIDTH, margin: "0 auto", display: "flex" };
 
-const contentWrapNoPadding = {
-  width: "100%",
-  maxWidth: APP_WIDTH,
-  margin: "0 auto",
-  display: "flex",
-};
-
-const headerStyle = {
-  background: `linear-gradient(160deg, ${PALETTE.teal} 0%, #3a6b5e 100%)`,
-  padding: "48px 0 28px",
-};
-
-const eyebrowStyle = {
-  color: "rgba(255,255,255,0.6)",
-  fontSize: 11,
-  fontFamily: "sans-serif",
-  letterSpacing: 3,
-  textTransform: "uppercase",
-  margin: "0 0 4px",
-};
-
-const statBoxStyle = {
-  background: "rgba(255,255,255,0.12)",
-  borderRadius: 12,
-  padding: "10px 14px",
-  flex: 1,
-  textAlign: "center",
-};
+const headerStyle = { background: `linear-gradient(160deg, ${PALETTE.teal} 0%, #3a6b5e 100%)`, padding: "48px 0 28px" };
+const eyebrowStyle = { color: "rgba(255,255,255,0.6)", fontSize: 11, fontFamily: "sans-serif", letterSpacing: 3, textTransform: "uppercase", margin: "0 0 4px" };
+const statBoxStyle = { background: "rgba(255,255,255,0.12)", borderRadius: 12, padding: "10px 14px", flex: 1, textAlign: "center" };
 
 function tabStyle(active) {
-  return {
-    flex: 1,
-    padding: "14px 8px",
-    background: "none",
-    border: "none",
-    fontSize: 13,
-    fontFamily: "sans-serif",
-    fontWeight: 700,
-    color: active ? PALETTE.teal : "#bbb",
-    borderBottom: `2px solid ${active ? PALETTE.teal : "transparent"}`,
-  };
+  return { flex: 1, padding: "14px 8px", background: "none", border: "none", fontSize: 13, fontFamily: "sans-serif", fontWeight: 700, color: active ? PALETTE.teal : "#bbb", borderBottom: `2px solid ${active ? PALETTE.teal : "transparent"}` };
 }
 
-const searchStyle = {
-  width: "100%",
-  padding: "12px 16px",
-  border: `1.5px solid ${PALETTE.blush}`,
-  borderRadius: 50,
-  fontSize: 14,
-  fontFamily: "sans-serif",
-  background: "white",
-  boxSizing: "border-box",
-  marginBottom: 12,
-};
+const searchStyle = { width: "100%", padding: "12px 16px", border: `1.5px solid ${PALETTE.blush}`, borderRadius: 50, fontSize: 14, fontFamily: "sans-serif", background: "white", boxSizing: "border-box", marginBottom: 12 };
+const cardStyle = { background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 12px rgba(44,44,44,0.07)", marginBottom: 12 };
 
-const cardStyle = {
-  background: "white",
-  borderRadius: 16,
-  overflow: "hidden",
-  boxShadow: "0 2px 12px rgba(44,44,44,0.07)",
-  marginBottom: 12,
-};
+const modalOverlay = { position: "fixed", inset: 0, background: "rgba(44,44,44,0.75)", zIndex: 90, display: "flex", alignItems: "flex-end", justifyContent: "center" };
+const modalBox = { background: PALETTE.cream, borderRadius: "24px 24px 0 0", padding: "28px 24px 40px", width: "100%", maxWidth: APP_WIDTH, maxHeight: "90vh", overflowY: "auto", fontFamily: "Georgia, serif", boxSizing: "border-box" };
+const closeButton = { border: "none", background: PALETTE.mist, borderRadius: "50%", width: 32, height: 32, fontSize: 18 };
 
-const modalOverlay = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(44,44,44,0.75)",
-  zIndex: 90,
-  display: "flex",
-  alignItems: "flex-end",
-  justifyContent: "center",
-};
-
-const modalBox = {
-  background: PALETTE.cream,
-  borderRadius: "24px 24px 0 0",
-  padding: "28px 24px 40px",
-  width: "100%",
-  maxWidth: APP_WIDTH,
-  maxHeight: "90vh",
-  overflowY: "auto",
-  fontFamily: "Georgia, serif",
-  boxSizing: "border-box",
-};
-
-const closeButton = {
-  border: "none",
-  background: PALETTE.mist,
-  borderRadius: "50%",
-  width: 32,
-  height: 32,
-  fontSize: 18,
-};
-
-const labelStyle = {
-  fontSize: 11,
-  fontFamily: "sans-serif",
-  fontWeight: 700,
-  textTransform: "uppercase",
-  letterSpacing: 1,
-  color: "#999",
-  display: "block",
-  marginBottom: 6,
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: 12,
-  border: `1.5px solid ${PALETTE.blush}`,
-  borderRadius: 10,
-  fontSize: 15,
-  background: "white",
-  boxSizing: "border-box",
-  fontFamily: "Georgia, serif",
-  outline: "none",
-  marginBottom: 16,
-};
-
-const pillWrapStyle = {
-  display: "flex",
-  gap: 6,
-  flexWrap: "wrap",
-  marginBottom: 16,
-};
+const labelStyle = { fontSize: 11, fontFamily: "sans-serif", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "#999", display: "block", marginBottom: 6 };
+const inputStyle = { width: "100%", padding: 12, border: `1.5px solid ${PALETTE.blush}`, borderRadius: 10, fontSize: 15, background: "white", boxSizing: "border-box", fontFamily: "Georgia, serif", outline: "none", marginBottom: 16 };
+const pillWrapStyle = { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 };
 
 function pillStyle(active, color) {
-  return {
-    padding: "6px 12px",
-    borderRadius: 99,
-    border: `1.5px solid ${active ? color : PALETTE.blush}`,
-    background: active ? color : "white",
-    color: active ? "white" : PALETTE.ink,
-    fontSize: 13,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    fontFamily: "sans-serif",
-  };
+  return { padding: "6px 12px", borderRadius: 99, border: `1.5px solid ${active ? color : PALETTE.blush}`, background: active ? color : "white", color: active ? "white" : PALETTE.ink, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "sans-serif" };
 }
 
 function tagStyle(background, color) {
-  return {
-    background,
-    color,
-    padding: "3px 9px",
-    borderRadius: 99,
-    fontSize: 11,
-    fontFamily: "sans-serif",
-  };
+  return { background, color, padding: "3px 9px", borderRadius: 99, fontSize: 11, fontFamily: "sans-serif" };
 }
 
-const smallHeadingStyle = {
-  fontSize: 11,
-  fontFamily: "sans-serif",
-  fontWeight: 700,
-  color: "#bbb",
-  textTransform: "uppercase",
-  letterSpacing: 1,
-  margin: "0 0 6px",
-};
+const smallHeadingStyle = { fontSize: 11, fontFamily: "sans-serif", fontWeight: 700, color: "#bbb", textTransform: "uppercase", letterSpacing: 1, margin: "0 0 6px" };
+const editButtonStyle = { marginTop: 12, marginRight: 8, border: "1px solid #ddd", background: "white", color: PALETTE.ink, borderRadius: 8, padding: "6px 14px" };
+const removeButton = { marginTop: 12, border: "1px solid #f0c8c0", background: "none", color: PALETTE.rose, borderRadius: 8, padding: "6px 14px" };
 
-const removeButton = {
-  marginTop: 12,
-  border: "1px solid #f0c8c0",
-  background: "none",
-  color: PALETTE.rose,
-  borderRadius: 8,
-  padding: "6px 14px",
-};
+const shopBoxStyle = { background: `linear-gradient(135deg, ${PALETTE.blush}, ${PALETTE.cloud})`, borderRadius: 20, padding: 24, textAlign: "center" };
+const shopButtonStyle = { display: "inline-block", background: PALETTE.teal, color: "white", padding: "12px 24px", borderRadius: 50, textDecoration: "none", fontFamily: "sans-serif", fontWeight: 700 };
 
-const shopBoxStyle = {
-  background: `linear-gradient(135deg, ${PALETTE.blush}, ${PALETTE.cloud})`,
-  borderRadius: 20,
-  padding: 24,
-  textAlign: "center",
-};
+const floatingButtonStyle = { position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", background: `linear-gradient(135deg, ${PALETTE.teal}, ${PALETTE.sage})`, color: "white", border: "none", borderRadius: 50, padding: "18px 32px", fontSize: 17, boxShadow: "0 6px 28px rgba(74,124,111,0.45)", fontFamily: "sans-serif", fontWeight: 700, zIndex: 50 };
+const toastStyle = { position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)", background: PALETTE.ink, color: "white", padding: "12px 24px", borderRadius: 50, fontSize: 14, fontFamily: "sans-serif", zIndex: 200 };
 
-const shopButtonStyle = {
-  display: "inline-block",
-  background: PALETTE.teal,
-  color: "white",
-  padding: "12px 24px",
-  borderRadius: 50,
-  textDecoration: "none",
-  fontFamily: "sans-serif",
-  fontWeight: 700,
-};
+const autoButtonStyle = { background: PALETTE.teal, color: "white", border: "none", borderRadius: 50, padding: "12px 18px", fontSize: 14, fontFamily: "sans-serif", fontWeight: 700, marginBottom: 16, boxShadow: "0 4px 14px rgba(74,124,111,0.25)" };
+const designWallBoxStyle = { background: "white", borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: "0 2px 10px rgba(44,44,44,0.06)" };
+const designWallGridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))", gap: 8 };
+const wallRemoveButtonStyle = { position: "absolute", top: -6, right: -6, background: "white", borderRadius: "50%", border: "1px solid #ddd", cursor: "pointer" };
+const clearWallButtonStyle = { marginTop: 12, background: "none", border: "1px solid #ddd", borderRadius: 8, padding: "6px 12px" };
+const addWallButtonStyle = { background: PALETTE.teal, color: "white", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer" };
 
-const floatingButtonStyle = {
-  position: "fixed",
-  bottom: 28,
-  left: "50%",
-  transform: "translateX(-50%)",
-  background: `linear-gradient(135deg, ${PALETTE.teal}, ${PALETTE.sage})`,
-  color: "white",
-  border: "none",
-  borderRadius: 50,
-  padding: "18px 32px",
-  fontSize: 17,
-  boxShadow: "0 6px 28px rgba(74,124,111,0.45)",
-  fontFamily: "sans-serif",
-  fontWeight: 700,
-  zIndex: 50,
-};
-
-const toastStyle = {
-  position: "fixed",
-  top: 24,
-  left: "50%",
-  transform: "translateX(-50%)",
-  background: PALETTE.ink,
-  color: "white",
-  padding: "12px 24px",
-  borderRadius: 50,
-  fontSize: 14,
-  fontFamily: "sans-serif",
-  zIndex: 200,
-};
-
-const designWallBoxStyle = {
-  background: "white",
-  borderRadius: 16,
-  padding: 16,
-  marginBottom: 16,
-  boxShadow: "0 2px 10px rgba(44,44,44,0.06)",
-};
-
-const designWallGridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
-  gap: 8,
-};
-
-const wallRemoveButtonStyle = {
-  position: "absolute",
-  top: -6,
-  right: -6,
-  background: "white",
-  borderRadius: "50%",
-  border: "1px solid #ddd",
-  cursor: "pointer",
-};
-
-const missingItemStyle = {
-  background: "#fff4df",
-  padding: "8px 12px",
-  borderRadius: 10,
-  fontSize: 12,
-  fontFamily: "sans-serif",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 8,
-};
-
-const miniButtonStyle = {
-  fontSize: 11,
-  padding: "4px 8px",
-  borderRadius: 6,
-  border: "1px solid #ddd",
-  background: "white",
-  cursor: "pointer",
-};
-
-const miniShopButtonStyle = {
-  fontSize: 11,
-  padding: "4px 8px",
-  borderRadius: 6,
-  background: "#4A7C6F",
-  color: "white",
-  textDecoration: "none",
-};
+const missingItemStyle = { background: "#fff4df", padding: "8px 12px", borderRadius: 10, fontSize: 12, fontFamily: "sans-serif", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 };
+const miniButtonStyle = { fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid #ddd", background: "white", cursor: "pointer" };
+const miniShopButtonStyle = { fontSize: 11, padding: "4px 8px", borderRadius: 6, background: "#4A7C6F", color: "white", textDecoration: "none" };
