@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 
 const PALETTE = {
@@ -396,6 +397,11 @@ const [bundleFilter, setBundleFilter] = useState(null);
     </p>
 
     {/* DESIGN WALL */}
+
+<p style={{ fontSize: 12, color: "#999", marginBottom: 10 }}>
+  Tip: Try mixing 1 focal print + 1 blender + 1 contrast color
+</p>
+
     {designWall.length > 0 && (
       <div style={{
         background: "white",
@@ -406,7 +412,9 @@ const [bundleFilter, setBundleFilter] = useState(null);
       }}>
         <h3 style={{ marginBottom: 10 }}>Design Wall</h3>
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "grid",
+gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
+gap: 8, }}>
           {designWall.map((item) => (
             <div key={item.id} style={{ position: "relative" }}>
               <FabricThumb {...item} size={70} />
@@ -496,7 +504,7 @@ const [bundleFilter, setBundleFilter] = useState(null);
                   cursor: "pointer"
                 }}
               >
-                Add to Wall
+                {designWall.find(f => f.id === item.id) ? "Added ✓" : "Add to Wall"}
               </button>
             </div>
           </div>
