@@ -275,7 +275,25 @@ export default function App() {
 
   const filtered = stash.filter((item) => {
     if (filterStyle && item.style !== filterStyle) return false;
-    if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
+    const filtered = stash.filter((item) => {
+  const searchText = search.toLowerCase();
+
+  const searchableItem = [
+    item.name,
+    item.color,
+    item.style,
+    item.collection,
+    item.notes,
+    String(item.yardage),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  if (filterStyle && item.style !== filterStyle) return false;
+  if (search && !searchableItem.includes(searchText)) return false;
+
+  return true;
+});
     return true;
   });
 
