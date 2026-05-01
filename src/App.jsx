@@ -1,4 +1,4 @@
-mport { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const PALETTE = {
   cream: "#FAF6F0",
