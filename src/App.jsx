@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 
 const PALETTE = {
@@ -430,59 +429,60 @@ const missing = analyzeBundle(designWall);
 
 {activeTab === "bundles" && (
   <div>
+    <h2>Build Your Bundle 🎨</h2>
 
-<h2>Build Your Bundle 🎨</h2>
-<p style={{ color: "#999", fontFamily: "sans-serif" }}>
-  Tap fabrics to add them to your design wall, or let Stash Snap suggest a balanced bundle from what you already have.
-</p>
+    <p style={{ color: "#999", fontFamily: "sans-serif" }}>
+      Tap fabrics to add them to your design wall, or let Stash Snap suggest a balanced bundle from what you already have.
+    </p>
 
-<button
-  onClick={() => setDesignWall(autoBuildBundle(stash))}
-  style={{
-    background: PALETTE.teal,
-    color: "white",
-    border: "none",
-    borderRadius: 50,
-    padding: "12px 18px",
-    fontSize: 14,
-    fontFamily: "sans-serif",
-    fontWeight: 700,
-    marginBottom: 16,
-    boxShadow: "0 4px 14px rgba(74,124,111,0.25)",
-  }}
->
-  ✨ Auto Build Bundle
-</button>
-
-    {/* DESIGN WALL */}
-
-<p style={{ fontSize: 12, color: "#999", marginBottom: 10 }}>
-  Tip: Try mixing 1 focal print + 1 blender + 1 contrast color
-</p>
+    <button
+      onClick={() => setDesignWall(autoBuildBundle(stash))}
+      style={{
+        background: PALETTE.teal,
+        color: "white",
+        border: "none",
+        borderRadius: 50,
+        padding: "12px 18px",
+        fontSize: 14,
+        fontFamily: "sans-serif",
+        fontWeight: 700,
+        marginBottom: 16,
+        boxShadow: "0 4px 14px rgba(74,124,111,0.25)",
+      }}
+    >
+      ✨ Auto Build Bundle
+    </button>
 
     {designWall.length > 0 && (
-      <div style={{
-        background: "white",
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
-        boxShadow: "0 2px 10px rgba(44,44,44,0.06)"
-      }}>
+      <div
+        style={{
+          background: "white",
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 16,
+          boxShadow: "0 2px 10px rgba(44,44,44,0.06)",
+        }}
+      >
         <h3 style={{ marginBottom: 10 }}>Design Wall</h3>
 
-<p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", marginTop: 0 }}>
-  Tip: A balanced bundle usually includes a focal print, a blender, a light fabric, and a contrast color.
-</p>
+        <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", marginTop: 0 }}>
+          Tip: A balanced bundle usually includes a focal print, a blender, a light fabric, and a contrast color.
+        </p>
 
-        <div style={{ display: "grid",
-gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
-gap: 8, }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
+            gap: 8,
+          }}
+        >
           {designWall.map((item) => (
             <div key={item.id} style={{ position: "relative" }}>
               <FabricThumb {...item} size={70} />
+
               <button
                 onClick={() =>
-                  setDesignWall(prev => prev.filter(f => f.id !== item.id))
+                  setDesignWall((prev) => prev.filter((f) => f.id !== item.id))
                 }
                 style={{
                   position: "absolute",
@@ -491,7 +491,7 @@ gap: 8, }}>
                   background: "white",
                   borderRadius: "50%",
                   border: "1px solid #ddd",
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               >
                 ✕
@@ -500,71 +500,55 @@ gap: 8, }}>
           ))}
         </div>
 
+        <p
+          style={{
+            fontSize: 13,
+            fontFamily: "sans-serif",
+            color: "#777",
+            marginTop: 10,
+          }}
+        >
+          ✨ This bundle works best when it mixes a focal print, a soft blender, a light neutral, and a contrast color for balance.
+        </p>
+
+        {missing.length > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <p style={smallHeadingStyle}>To improve this bundle</p>
+
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {missing.map((m) => (
+                <span
+                  key={m}
+                  style={{
+                    background: "#fff4df",
+                    padding: "4px 10px",
+                    borderRadius: 99,
+                    fontSize: 12,
+                    fontFamily: "sans-serif",
+                  }}
+                >
+                  ➕ {m}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
           onClick={() => setDesignWall([])}
           style={{
-            marginTop: 10,
+            marginTop: 12,
             background: "none",
             border: "1px solid #ddd",
             borderRadius: 8,
-            padding: "6px 12px"
+            padding: "6px 12px",
           }}
-
-</div>
-
-<p style={{
-  fontSize: 13,
-  fontFamily: "sans-serif",
-  color: "#777",
-  marginTop: 10
-}}>
-  ✨ This bundle works because it mixes a focal print, a soft blender, and a light neutral with a contrast color for balance.
-</p>
-
-</div>
-
-<p style={{
-  fontSize: 13,
-  fontFamily: "sans-serif",
-  color: "#777",
-  marginTop: 10
-}}>
-  ✨ This bundle works because it mixes a focal print, a soft blender, and a light neutral with a contrast color for balance.
-</p>
-
-{missing.length > 0 && (
-  <div style={{ marginTop: 10 }}>
-    <p style={smallHeadingStyle}>To improve this bundle</p>
-
-    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-      {missing.map((m) => (
-        <span
-          key={m}
-          style={{
-            background: "#fff4df",
-            padding: "4px 10px",
-            borderRadius: 99,
-            fontSize: 12,
-            fontFamily: "sans-serif",
-          }}
-        >
-          ➕ {m}
-        </span>
-      ))}
-    </div>
-  </div>
-)}
-
-<button
-  onClick={() => setDesignWall([])}
-
         >
           Clear Wall
         </button>
       </div>
     )}
 
-    {/* FILTERS */}
     <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16 }}>
       <button onClick={() => setBundleFilter(null)} style={pillStyle(!bundleFilter, PALETTE.teal)}>
         All
@@ -573,9 +557,7 @@ gap: 8, }}>
       {STYLE_TAGS.map((style) => (
         <button
           key={style}
-          onClick={() =>
-            setBundleFilter(bundleFilter === style ? null : style)
-          }
+          onClick={() => setBundleFilter(bundleFilter === style ? null : style)}
           style={pillStyle(bundleFilter === style, PALETTE.rose)}
         >
           {style}
@@ -583,9 +565,8 @@ gap: 8, }}>
       ))}
     </div>
 
-    {/* FABRIC LIST */}
     {stash
-      .filter(item => !bundleFilter || item.style === bundleFilter)
+      .filter((item) => !bundleFilter || item.style === bundleFilter)
       .map((item) => (
         <div key={item.id} style={cardStyle}>
           <div style={{ display: "flex", padding: 12 }}>
@@ -593,16 +574,15 @@ gap: 8, }}>
 
             <div style={{ marginLeft: 12, flex: 1 }}>
               <strong>{item.name}</strong>
+
               <p style={{ fontSize: 12, color: "#999" }}>
                 {item.color} · {item.yardage} yds
               </p>
 
               <button
                 onClick={() =>
-                  setDesignWall(prev =>
-                    prev.find(f => f.id === item.id)
-                      ? prev
-                      : [...prev, item]
+                  setDesignWall((prev) =>
+                    prev.find((f) => f.id === item.id) ? prev : [...prev, item]
                   )
                 }
                 style={{
@@ -612,10 +592,10 @@ gap: 8, }}>
                   borderRadius: 8,
                   padding: "6px 12px",
                   fontSize: 12,
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               >
-                {designWall.find(f => f.id === item.id) ? "Added ✓" : "Add to Wall"}
+                {designWall.find((f) => f.id === item.id) ? "Added ✓" : "Add to Wall"}
               </button>
             </div>
           </div>
