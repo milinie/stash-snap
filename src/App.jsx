@@ -131,7 +131,7 @@ function AddModal({ onSave, onClose }) {
         </div>
 
         <label style={labelStyle}>Fabric Photo</label>
-        <input type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ marginBottom: 16 }} />
+     <input type="file" accept="image/*" onChange={handlePhoto} style={{ marginBottom: 16 }} />
 
         {form.photo && (
           <div style={{ borderRadius: 14, overflow: "hidden", width: 96, height: 96, marginBottom: 16 }}>
@@ -402,7 +402,7 @@ export default function App() {
         )}
       </main>
 
-      <button onClick={() => setAdding(true)} style={floatingButtonStyle}>📸 Upload Fabric</button>
+      <button onClick={() => setAdding(true)} style={floatingButtonStyle}>📸 Add Fabric</button>
 
       {adding && <AddModal onSave={handleSave} onClose={() => setAdding(false)} />}
 
