@@ -627,7 +627,7 @@ export default function App() {
           overflow: "hidden",
         }}
       >
-        <div style={{ maxWidth: 100%, margin: "0 auto", position: "relative" }}>
+        <div style={{ maxWidth: 100%, margin: "0", position: "relative" }}>
           <p
             style={{
               color: "rgba(255,255,255,0.6)",
@@ -701,7 +701,7 @@ export default function App() {
           borderBottom: `1px solid ${PALETTE.blush}`,
         }}
       >
-        <div style={{ display: "flex", maxWidth: 100%, margin: "0 auto" }}>
+        <div style={{ display: "flex", maxWidth: 100%, margin: "0" }}>
           {[
             ["stash", "My Stash"],
             ["bundles", "Bundle Match"],
@@ -733,7 +733,7 @@ export default function App() {
       <main
         style={{
           maxWidth: 100%,
-          margin: "0 auto",
+          margin: "0",
           padding: "20px 16px 110px",
         }}
       >
