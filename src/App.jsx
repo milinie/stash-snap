@@ -344,10 +344,22 @@ const bundleFiltered = stash.filter((item) => {
     setTimeout(() => setToast(null), 2500);
   };
   const handleSave = (form) => {
-    const newItem = {
-      ...form,
-      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    };
+  const newItem = {
+    ...form,
+    id: form.id || Date.now(),
+    date:
+      form.date ||
+      new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+    yardage: Number(form.yardage) || 0,
+  };
+
+  setStash((prev) => [newItem, ...prev]);
+  setAdding(false);
+  showToast("✅ Added to your stash!");
+};
     setStash((prev) => [newItem, ...prev]);
     setAdding(false);
     showToast("✅ Added to your stash!");
