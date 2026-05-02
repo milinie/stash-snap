@@ -102,13 +102,37 @@ function AddModal({ onSave, onClose, initialData }) {
   const update = (key, value) => {
     setForm({ ...form, [key]: value });
   };
+const handlePhoto = (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
 
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    update("photo", e.target.result);
+  };
+
+  reader.readAsDataURL(file);
+};
   const canSave = form.name.trim() !== "" && String(form.yardage).trim() !== "";
   return (
     <div style={modalOverlay}>
       <div style={modalBox}>
         <h2>{initialData ? "Edit Fabric" : "Add Fabric"}</h2>
+<label style={labelStyle}>Fabric Photo</label>
 
+<input
+  type="file"
+  accept="image/*"
+  onChange={handlePhoto}
+  style={{ marginBottom: 16 }}
+/>
+
+{form.photo && (
+  <div style={{ borderRadius: 14, overflow: "hidden", width: 96, height: 96, marginBottom: 16 }}>
+    <FabricThumb photo={form.photo} size={96} />
+  </div>
+)}
         <label style={labelStyle}>Fabric Name</label>
         <input
           value={form.name}
