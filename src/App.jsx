@@ -590,6 +590,8 @@ const bundleFiltered = stash.filter((item) => {
     </div>
   </div>
 ))}
+          </div>
+        )}
         {activeTab === "saved" && (
           <div>
             <h2>Saved Bundles 💾</h2>
