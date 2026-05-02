@@ -112,6 +112,8 @@ function compressImage(file, maxWidth = 700, quality = 0.65) {
     };
 
     reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 function AddModal({ onSave, onClose, initialData }) {
@@ -143,9 +145,9 @@ const handlePhoto = async (event) => {
     alert("That photo could not be added. Try a smaller image.");
   }
 };
-  reader.readAsDataURL(file);
-};
-  const canSave = form.name.trim() !== "" && String(form.yardage).trim() !== "";
+
+const canSave = form.name.trim() !== "" && String(form.yardage).trim() !== "";
+
   return (
     <div style={modalOverlay}>
       <div style={modalBox}>
