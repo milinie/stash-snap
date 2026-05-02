@@ -301,6 +301,11 @@ export default function App() {
   const [editingItem, setEditingItem] = useState(null);
   const [filterStyle, setFilterStyle] = useState(null);
   const [bundleFilter, setBundleFilter] = useState(null);
+
+const [bundleSearch, setBundleSearch] = useState("");
+const [bundleColorFilter, setBundleColorFilter] = useState(null);
+const [bundleCollectionFilter, setBundleCollectionFilter] = useState(null);
+
   const [designWall, setDesignWall] = useState([]);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(null);
@@ -317,6 +322,28 @@ export default function App() {
   const totalYards = useMemo(() => stash.reduce((sum, item) => sum + item.yardage, 0), [stash]);
   const collections = useMemo(() => [...new Set(stash.map((item) => item.collection))], [stash]);
   const missing = analyzeBundle(designWall);
+
+const bundleFiltered = stash.filter((item) => {
+  const searchText = bundleSearch.toLowerCase();
+
+  const searchableItem = [
+    item.name,
+    item.color,
+    item.style,
+    item.collection,
+    item.notes,
+    String(item.yardage),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  if (bundleFilter && item.style !== bundleFilter) return false;
+  if (bundleColorFilter && item.color !== bundleColorFilter) return false;
+  if (bundleCollectionFilter && item.collection !== bundleCollectionFilter) return false;
+  if (bundleSearch && !searchableItem.includes(searchText)) return false;
+
+  return true;
+});
 
   const filtered = stash.filter((item) => {
     const searchText = search.toLowerCase();
@@ -516,19 +543,67 @@ export default function App() {
               </div>
             )}
 
-            <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16 }}>
-              <button onClick={() => setBundleFilter(null)} style={pillStyle(!bundleFilter, PALETTE.teal)}>All</button>
+     <input
+  value={bundleSearch}
+  onChange={(e) => setBundleSearch(e.target.value)}
+  placeholder="🔍 Search by name, notes, color, style..."
+  style={searchStyle}
+/>
 
-              {STYLE_TAGS.map((style) => (
-                <button key={style} onClick={() => setBundleFilter(bundleFilter === style ? null : style)} style={pillStyle(bundleFilter === style, PALETTE.rose)}>
-                  {style}
-                </button>
-              ))}
-            </div>
+<p style={smallHeadingStyle}>Filter by color</p>
+<div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 12 }}>
+  <button onClick={() => setBundleColorFilter(null)} style={pillStyle(!bundleColorFilter, PALETTE.teal)}>
+    All
+  </button>
 
-            {stash
-              .filter((item) => !bundleFilter || item.style === bundleFilter)
-              .map((item) => (
+  {COLOR_TAGS.map((color) => (
+    <button
+      key={color}
+      onClick={() => setBundleColorFilter(bundleColorFilter === color ? null : color)}
+      style={pillStyle(bundleColorFilter === color, PALETTE.teal)}
+    >
+      {color}
+    </button>
+  ))}
+</div>
+
+<p style={smallHeadingStyle}>Filter by style</p>
+<div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 12 }}>
+  <button onClick={() => setBundleFilter(null)} style={pillStyle(!bundleFilter, PALETTE.rose)}>
+    All
+  </button>
+
+  {STYLE_TAGS.map((style) => (
+    <button
+      key={style}
+      onClick={() => setBundleFilter(bundleFilter === style ? null : style)}
+      style={pillStyle(bundleFilter === style, PALETTE.rose)}
+    >
+      {style}
+    </button>
+  ))}
+</div>
+
+<p style={smallHeadingStyle}>Filter by collection</p>
+<div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16 }}>
+  <button onClick={() => setBundleCollectionFilter(null)} style={pillStyle(!bundleCollectionFilter, PALETTE.honey)}>
+    All
+  </button>
+
+  {COLLECTIONS.map((collection) => (
+    <button
+      key={collection}
+      onClick={() =>
+        setBundleCollectionFilter(bundleCollectionFilter === collection ? null : collection)
+      }
+      style={pillStyle(bundleCollectionFilter === collection, PALETTE.honey)}
+    >
+      {collection}
+    </button>
+  ))}
+</div>
+
+{bundleFiltered.map((item) => ( (
                 <div key={item.id} style={cardStyle}>
                   <div style={{ display: "flex", padding: 12 }}>
                     <FabricThumb {...item} />
