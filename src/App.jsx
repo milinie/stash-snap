@@ -419,7 +419,7 @@ const bundleFiltered = stash.filter((item) => {
       <header style={headerStyle}>
         <div style={contentWrap}>
           <p style={eyebrowStyle}>Crafting Dreams Fabric</p>
-          <h1 style={{ color: "white", fontSize: 34, margin: "0 0 4px" }}>Stash Snap ✂️</h1>
+          <h1 style={{ color: "white", fontSize: 34, margin: "0 0 4px" }}> Stash Snap 📸 </h1>
           <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, margin: "0 0 24px", fontStyle: "italic" }}>
             Snap · Identify · Organize
           </p>
@@ -603,7 +603,7 @@ const bundleFiltered = stash.filter((item) => {
   ))}
 </div>
 
-{bundleFiltered.map((item) => ( (
+{bundleFiltered.map((item) => (
                 <div key={item.id} style={cardStyle}>
                   <div style={{ display: "flex", padding: 12 }}>
                     <FabricThumb {...item} />
