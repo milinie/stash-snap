@@ -93,7 +93,9 @@ function AddModal({ onSave, onClose, initialData }) {
     name: initialData?.name || "",
     color: initialData?.color || "Rose",
     style: initialData?.style || "Floral",
-    yardage: initialData?.yardage ? String(initialData.yardage) : "",
+    yardage: initialData?.yardage !== undefined && initialData?.yardage !== null
+  ? String(initialData.yardage)
+  : "",
     collection: initialData?.collection || "My Stash",
     notes: initialData?.notes || "",
     photo: initialData?.photo || null,
@@ -114,8 +116,7 @@ function AddModal({ onSave, onClose, initialData }) {
     reader.readAsDataURL(file);
   };
 
-  const canSave = form.name.trim() !== "" && form.yardage !== "";
-
+  const canSave = String(form.name || "").trim() !== "" && String(form.yardage || "") !== "";
   return (
     <div style={modalOverlay}>
       <div style={modalBox}>
