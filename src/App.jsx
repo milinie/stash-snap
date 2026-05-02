@@ -409,16 +409,31 @@ export default function App() {
   };
 
   const handleUpdate = (updated) => {
-    const updatedItem = {
-      ...updated,
-      yardage: Number(updated.yardage) || 0,
-    };
-
-    setStash((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
-    setDesignWall((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
-    setEditingItem(null);
-    showToast("✏️ Fabric updated!");
+  const updatedItem = {
+    ...updated,
+    yardage: Number(updated.yardage) || 0,
   };
+
+  setStash((prev) =>
+    prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+  );
+
+  setDesignWall((prev) =>
+    prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+  );
+
+  setSavedBundles((prev) =>
+    prev.map((bundle) => ({
+      ...bundle,
+      fabrics: bundle.fabrics.map((fabric) =>
+        fabric.id === updatedItem.id ? updatedItem : fabric
+      ),
+    }))
+  );
+
+  setEditingItem(null);
+  showToast("✏️ Fabric updated!");
+};
 
   const handleDelete = (id) => {
     setStash((prev) => prev.filter((item) => item.id !== id));
