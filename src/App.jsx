@@ -308,14 +308,16 @@ const [bundleCollectionFilter, setBundleCollectionFilter] = useState(null);
     document.body.style.margin = "0";
     document.body.style.background = PALETTE.cream;
   }, []);
+
+useEffect(() => {
+  document.body.style.margin = "0";
+  document.body.style.background = PALETTE.cream;
+}, []);
+
 useEffect(() => {
   localStorage.setItem("stash-snap-data", JSON.stringify(stash));
 }, [stash]);
-  } catch (error) {
-    console.error("Could not save stash to localStorage:", error);
-    alert("This fabric photo is too large to save. Try adding the fabric without a photo for now.");
-  }
-}, [stash]);
+
   const totalYards = useMemo(() => stash.reduce((sum, item) => sum + item.yardage, 0), [stash]);
   const collections = useMemo(() => [...new Set(stash.map((item) => item.collection))], [stash]);
   const missing = analyzeBundle(designWall);
