@@ -86,6 +86,36 @@ function FabricThumb({ color, style, photo, size = 76 }) {
     </svg>
   );
 }
+
+function compressImage(file, maxWidth = 700, quality = 0.65) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+
+      img.onerror = reject;
+      img.src = event.target.result;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function AddModal({ onSave, onClose, initialData }) {
   const [form, setForm] = useState({
     id: initialData ? initialData.id : undefined,
@@ -102,10 +132,19 @@ function AddModal({ onSave, onClose, initialData }) {
   const update = (key, value) => {
     setForm({ ...form, [key]: value });
   };
-const handlePhoto = (event) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
 
+const handlePhoto = async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const compressedPhoto = await compressImage(file);
+    update("photo", compressedPhoto);
+  } catch (error) {
+    console.error("Photo compression failed:", error);
+    alert("That photo could not be added. Try a smaller image.");
+  }
+};
   const reader = new FileReader();
 
   reader.onload = (e) => {
@@ -319,7 +358,7 @@ useEffect(() => {
     localStorage.setItem("stash-snap-data", JSON.stringify(stash));
   } catch (error) {
     console.error("Could not save stash:", error);
-    alert("This photo is too large to save. Please add the fabric without a photo for now.");
+    // silently fail for now (no popup)
   }
 }, [stash]);
 
@@ -366,10 +405,12 @@ const bundleFiltered = stash.filter((item) => {
         day: "numeric",
       }),
     yardage: Number(form.yardage) || 0,
-
-    // TEMP FIX: prevents blank screen from large photo storage
-    photo: null,
   };
+
+  setStash((prev) => [newItem, ...prev]);
+  setAdding(false);
+  showToast("✅ Added to your stash!");
+};
 
   setStash((prev) => [newItem, ...prev]);
   setAdding(false);
