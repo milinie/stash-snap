@@ -145,12 +145,6 @@ const handlePhoto = async (event) => {
     alert("That photo could not be added. Try a smaller image.");
   }
 };
-  const reader = new FileReader();
-
-  reader.onload = (e) => {
-    update("photo", e.target.result);
-  };
-
   reader.readAsDataURL(file);
 };
   const canSave = form.name.trim() !== "" && String(form.yardage).trim() !== "";
@@ -349,11 +343,6 @@ const [bundleCollectionFilter, setBundleCollectionFilter] = useState(null);
   }, []);
 
 useEffect(() => {
-  document.body.style.margin = "0";
-  document.body.style.background = PALETTE.cream;
-}, []);
-
-useEffect(() => {
   try {
     localStorage.setItem("stash-snap-data", JSON.stringify(stash));
   } catch (error) {
@@ -412,10 +401,6 @@ const bundleFiltered = stash.filter((item) => {
   showToast("✅ Added to your stash!");
 };
 
-  setStash((prev) => [newItem, ...prev]);
-  setAdding(false);
-  showToast("✅ Added to your stash!");
-};
   const handleUpdate = (updated) => {
     setStash((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
     setDesignWall((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
