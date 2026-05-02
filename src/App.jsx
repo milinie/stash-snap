@@ -112,8 +112,6 @@ function compressImage(file, maxWidth = 700, quality = 0.65) {
     };
 
     reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 function AddModal({ onSave, onClose, initialData }) {
