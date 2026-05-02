@@ -103,8 +103,7 @@ function AddModal({ onSave, onClose, initialData }) {
     setForm({ ...form, [key]: value });
   };
 
-  const canSave = form.name !== "" && form.yardage !== "";
-
+  const canSave = form.name.trim() !== "" && String(form.yardage).trim() !== "";
   return (
     <div style={modalOverlay}>
       <div style={modalBox}>
@@ -188,109 +187,6 @@ function AddModal({ onSave, onClose, initialData }) {
 
         <button onClick={onClose} style={cancelModalButtonStyle}>
           Cancel
-        </button>
-      </div>
-    </div>
-  );
-}
-
-        <label style={labelStyle}>Fabric Photo</label>
-        <input type="file" accept="image/*" onChange={handlePhoto} style={{ marginBottom: 16 }} />
-
-        {form.photo && (
-          <div style={{ borderRadius: 14, overflow: "hidden", width: 96, height: 96, marginBottom: 16 }}>
-            <FabricThumb photo={form.photo} size={96} />
-          </div>
-        )}
-
-        <label style={labelStyle}>Fabric Name</label>
-        <input
-          value={form.name}
-          onChange={(e) => update("name", e.target.value)}
-          placeholder="Example: Sage Floral"
-          style={inputStyle}
-        />
-
-        <label style={labelStyle}>Yardage</label>
-        <input
-          value={form.yardage}
-          onChange={(e) => update("yardage", e.target.value)}
-          placeholder="Example: 2.5"
-          inputMode="decimal"
-          style={inputStyle}
-        />
-
-        <label style={labelStyle}>Color</label>
-        <div style={pillWrapStyle}>
-          {COLOR_TAGS.map((color) => (
-            <button
-              key={color}
-              onClick={() => update("color", color)}
-              style={pillStyle(form.color === color, PALETTE.teal)}
-            >
-              {color}
-            </button>
-          ))}
-        </div>
-
-        <label style={labelStyle}>Pattern Style</label>
-        <div style={pillWrapStyle}>
-          {STYLE_TAGS.map((style) => (
-            <button
-              key={style}
-              onClick={() => update("style", style)}
-              style={pillStyle(form.style === style, PALETTE.rose)}
-            >
-              {style}
-            </button>
-          ))}
-        </div>
-
-        <label style={labelStyle}>Collection</label>
-        <select
-          value={form.collection}
-          onChange={(e) => update("collection", e.target.value)}
-          style={inputStyle}
-        >
-          {COLLECTIONS.map((collection) => (
-            <option key={collection}>{collection}</option>
-          ))}
-        </select>
-
-        <label style={labelStyle}>Notes</label>
-        <textarea
-          value={form.notes}
-          onChange={(e) => update("notes", e.target.value)}
-          placeholder="Example: Perfect for sashing or quilt border"
-          rows={3}
-          style={{ ...inputStyle, resize: "none" }}
-        />
-
-        <button
-          disabled={!canSave}
-          onClick={() =>
-            onSave({
-              ...form,
-              id: form.id || Date.now(),
-              date: form.date || new Date().toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              }),
-              yardage: parseFloat(form.yardage) || 0,
-            })
-          }
-          style={{
-            width: "100%",
-            border: "none",
-            borderRadius: 50,
-            padding: 16,
-            fontSize: 17,
-            color: "white",
-            background: `linear-gradient(135deg, ${PALETTE.teal}, ${PALETTE.sage})`,
-            opacity: canSave ? 1 : 0.5,
-          }}
-        >
-          {initialData ? "Save Changes ✏️" : "Save to Stash 🧵"}
         </button>
       </div>
     </div>
@@ -777,7 +673,6 @@ const saveBundleButtonStyle = { marginTop: 10, marginLeft: 8, background: PALETT
 const addWallButtonStyle = { background: PALETTE.teal, color: "white", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer" };
 const missingItemStyle = { background: "#fff4df", padding: "8px 12px", borderRadius: 10, fontSize: 12, fontFamily: "sans-serif", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 };
 const miniButtonStyle = { fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid #ddd", background: "white", cursor: "pointer" };
-const miniShopButtonStyle = { fontSize: 11, padding: "4px 8px", borderRadius: 6, background: "#4A7C6F", color: "white", textDecoration: "none" };
 const miniShopButtonStyle = { fontSize: 11, padding: "4px 8px", borderRadius: 6, background: "#4A7C6F", color: "white", textDecoration: "none" };
 const saveModalButtonStyle = {
   width: "100%",
