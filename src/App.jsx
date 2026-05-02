@@ -315,7 +315,12 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  localStorage.setItem("stash-snap-data", JSON.stringify(stash));
+  try {
+    localStorage.setItem("stash-snap-data", JSON.stringify(stash));
+  } catch (error) {
+    console.error("Could not save stash:", error);
+    alert("This photo is too large to save. Please add the fabric without a photo for now.");
+  }
 }, [stash]);
 
   const totalYards = useMemo(() => stash.reduce((sum, item) => sum + item.yardage, 0), [stash]);
@@ -361,6 +366,9 @@ const bundleFiltered = stash.filter((item) => {
         day: "numeric",
       }),
     yardage: Number(form.yardage) || 0,
+
+    // TEMP FIX: prevents blank screen from large photo storage
+    photo: null,
   };
 
   setStash((prev) => [newItem, ...prev]);
