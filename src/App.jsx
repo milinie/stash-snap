@@ -51,7 +51,7 @@ function getColorHex(color) {
   return colorMap[color] || "#DDD";
 }
 
-function compressImage(file, maxWidth = 700, quality = 0.65) {
+function compressImage(file, maxWidth = 350, quality = 0.35) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -60,16 +60,32 @@ function compressImage(file, maxWidth = 700, quality = 0.65) {
 
       img.onload = () => {
         const scale = Math.min(1, maxWidth / img.width);
+
         const canvas = document.createElement("canvas");
 
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
 
         const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject(new Error("Canvas not supported"));
+          return;
+        }
+
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         resolve(canvas.toDataURL("image/jpeg", quality));
       };
+
+      img.onerror = reject;
+      img.src = event.target.result;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
       img.onerror = reject;
       img.src = event.target.result;
@@ -131,11 +147,29 @@ function AddModal({ onSave, onClose, initialData }) {
         <label style={labelStyle}>Fabric Photo</label>
         <input type="file" accept="image/*" onChange={handlePhoto} style={{ marginBottom: 16 }} />
 
-        {form.photo && (
-          <div style={{ borderRadius: 14, overflow: "hidden", width: 96, height: 96, marginBottom: 16 }}>
-            <FabricThumb photo={form.photo} size={96} />
-          </div>
-        )}
+{form.photo && (
+  <>
+    <div
+      style={{
+        borderRadius: 14,
+        overflow: "hidden",
+        width: 96,
+        height: 96,
+        marginBottom: 8
+      }}
+    >
+      <FabricThumb photo={form.photo} size={96} />
+    </div>
+
+    <button
+      type="button"
+      onClick={() => update("photo", null)}
+      style={{ ...cancelModalButtonStyle, marginBottom: 16 }}
+    >
+      Remove Photo
+    </button>
+  </>
+)}
 
         <label style={labelStyle}>Fabric Name</label>
         <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Example: Sage Floral" style={inputStyle} />
@@ -296,12 +330,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem("stash-snap-data", JSON.stringify(stash));
-    } catch (error) {
-      console.error("Could not save stash:", error);
-    }
-  }, [stash]);
+  try {
+    localStorage.setItem("stash-snap-data", JSON.stringify(stash));
+  } catch (error) {
+    console.error("Could not save stash:", error);
+    alert("Photo is too large to save. Try a smaller photo.");
+  }
+}, [stash]);
 
   const totalYards = useMemo(() => stash.reduce((sum, item) => sum + item.yardage, 0), [stash]);
   const collections = useMemo(() => [...new Set(stash.map((item) => item.collection))], [stash]);
@@ -672,4 +707,3 @@ function tagStyle(background, color) {
 
 createRoot(document.getElementById("root")).render(<App />);
 export default App;
-
