@@ -78,24 +78,6 @@ function compressImage(file, maxWidth = 350, quality = 0.35) {
         resolve(canvas.toDataURL("image/jpeg", quality));
       };
 
-      img.onerror = reject;
-      img.src = event.target.result;
-    };
-
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-      img.onerror = reject;
-      img.src = event.target.result;
-    };
-
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 function FabricThumb({ color, style, photo, size = 76 }) {
   if (photo) {
     return <img src={photo} alt="Fabric" style={{ width: size, height: size, objectFit: "cover", display: "block" }} />;
@@ -706,4 +688,3 @@ function tagStyle(background, color) {
 }
 
 createRoot(document.getElementById("root")).render(<App />);
-export default App;
