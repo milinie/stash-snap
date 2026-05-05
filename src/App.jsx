@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { createRoot } from "react-dom/client";
 
 const PALETTE = {
   cream: "#FAF6F0",
@@ -60,7 +59,6 @@ function compressImage(file, maxWidth = 350, quality = 0.35) {
 
       img.onload = () => {
         const scale = Math.min(1, maxWidth / img.width);
-
         const canvas = document.createElement("canvas");
 
         canvas.width = Math.round(img.width * scale);
@@ -74,9 +72,17 @@ function compressImage(file, maxWidth = 350, quality = 0.35) {
         }
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
         resolve(canvas.toDataURL("image/jpeg", quality));
       };
+
+      img.onerror = reject;
+      img.src = event.target.result;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 function FabricThumb({ color, style, photo, size = 76 }) {
   if (photo) {
@@ -687,8 +693,4 @@ function tagStyle(background, color) {
   };
 }
 
-createRoot(document.getElementById("root")).render(<App />);
-
-      
 export default App;
-
