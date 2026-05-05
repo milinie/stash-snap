@@ -13,7 +13,18 @@ const PALETTE = {
 };
 
 const STYLE_TAGS = ["Floral", "Geometric", "Solid", "Stripe", "Blender", "Vintage"];
-const COLOR_TAGS = ["Sage", "Rose", "Cream", "Navy", "Honey", "Lavender", "Teal", "Blush", "Cloud"];
+
+const COLOR_TAGS = [
+  "White", "Ivory", "Cream", "Beige", "Tan", "Brown",
+  "Black", "Gray", "Charcoal",
+  "Red", "Coral", "Rose", "Pink", "Blush", "Peach",
+  "Orange", "Gold", "Honey", "Yellow",
+  "Green", "Sage", "Mint", "Olive", "Teal",
+  "Blue", "Navy", "Aqua", "Turquoise",
+  "Purple", "Lavender", "Lilac",
+  "Cloud", "Multi", "Low Volume"
+];
+
 const COLLECTIONS = ["My Stash", "Current Project", "Gifted", "Shop Sample", "Fat Quarters"];
 
 const SAMPLE_STASH = [
@@ -165,10 +176,20 @@ function AddModal({ onSave, onClose, initialData }) {
         <label style={labelStyle}>Yardage</label>
         <input value={form.yardage} onChange={(e) => update("yardage", e.target.value)} placeholder="Example: 2.5" inputMode="decimal" style={inputStyle} />
 
-        <label style={labelStyle}>Color</label>
-        <select value={form.color} onChange={(e) => update("color", e.target.value)} style={inputStyle}>
-          {COLOR_TAGS.map((color) => <option key={color} value={color}>{color}</option>)}
-        </select>
+<label style={labelStyle}>Color</label>
+<input
+  value={form.color}
+  onChange={(e) => update("color", e.target.value)}
+  placeholder="Example: Dusty Rose, Sage Green, Cream, Navy"
+  list="color-options"
+  style={inputStyle}
+/>
+
+<datalist id="color-options">
+  {COLOR_TAGS.map((color) => (
+    <option key={color} value={color} />
+  ))}
+</datalist>
 
         <label style={labelStyle}>Style</label>
         <select value={form.style} onChange={(e) => update("style", e.target.value)} style={inputStyle}>
