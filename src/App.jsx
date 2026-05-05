@@ -671,3 +671,5 @@ function tagStyle(background, color) {
 }
 
 createRoot(document.getElementById("root")).render(<App />);
+export default App;
+
