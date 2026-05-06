@@ -292,13 +292,16 @@ function FabricCard({ item, onDelete, onEdit }) {
           <h3 style={{ fontSize: 16, color: PALETTE.ink, margin: "0 0 4px" }}>{item.name}</h3>
           <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", margin: 0 }}>
 
-{item.fabricType || "Fabric"}
-{item.pieceCount ? ` · ${item.pieceCount} pcs` : ""}
-{item.pieceSize ? ` · ${item.pieceSize}` : ""}
-{item.yardage ? ` · ${item.yardage} yds` : ""}
- · {item.collection}
+<p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", margin: 0 }}>
+  {item.fabricType || "Fabric"}
+  {item.pieceCount ? ` · ${item.pieceCount} pcs` : ""}
+  {item.pieceSize ? ` · ${item.pieceSize}` : ""}
+  {item.yardage ? ` · ${item.yardage} yds` : ""}
+  {` · ${item.collection}`}
+</p>
 
-          <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+<div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+
             <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>✔ {item.color}</span>
             <span style={tagStyle(PALETTE.mist, PALETTE.teal)}>✔ {item.style}</span>
           </div>
