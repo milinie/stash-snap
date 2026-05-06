@@ -191,6 +191,15 @@ function AddModal({ onSave, onClose, initialData }) {
 
   const canSave = form.name.trim() !== "" && String(form.yardage).trim() !== "";
 
+const showPieceFields = [
+  "Fat Quarter",
+  "Fat Quarter Bundle",
+  '10" Squares',
+  "Charm Pack",
+  "Jelly Roll",
+  "Layer Cake"
+].includes(form.fabricType);
+
   return (
     <div style={modalOverlay}>
       <div style={modalBox}>
@@ -246,37 +255,67 @@ function AddModal({ onSave, onClose, initialData }) {
   {FABRIC_TYPES.map((type) => (
     <option key={type} value={type}>{type}</option>
   ))}
+
 </select>
 
-<label style={labelStyle}>Piece Count</label>
+{showPieceFields && (
+  <>
+    <label style={labelStyle}>Piece Count</label>
+
+    <input
+      value={form.pieceCount}
+      onChange={(e) => {
+        const pieceCount = e.target.value;
+        const calculated = calculateYardageFromPieces(
+          form.fabricType,
+          pieceCount,
+          form.pieceSize
+        );
+
+        setForm((prev) => ({
+          ...prev,
+          pieceCount,
+          yardage: calculated !== "" ? String(calculated) : prev.yardage
+        }));
+      }}
+      placeholder="Example: 21"
+      inputMode="numeric"
+      style={inputStyle}
+    />
+
+    <label style={labelStyle}>Piece Size</label>
+
+    <input
+      value={form.pieceSize}
+      onChange={(e) => {
+        const pieceSize = e.target.value;
+        const calculated = calculateYardageFromPieces(
+          form.fabricType,
+          form.pieceCount,
+          pieceSize
+        );
+
+        setForm((prev) => ({
+          ...prev,
+          pieceSize,
+          yardage: calculated !== "" ? String(calculated) : prev.yardage
+        }));
+      }}
+      placeholder='Example: Fat Quarter, 10" square, 5" charm'
+      style={inputStyle}
+    />
+  </>
+)}
+
+<label style={labelStyle}>Yardage</label>
 
 <input
-  value={form.pieceCount}
-  onChange={(e) => {
-    const pieceCount = e.target.value;
-    const calculated = calculateYardageFromPieces(form.fabricType, pieceCount, form.pieceSize);
-
-    setForm((prev) => ({
-      ...prev,
-      pieceCount,
-      yardage: calculated !== "" ? String(calculated) : prev.yardage
-    }));
-  }}
-  placeholder="Example: 21"
-  inputMode="numeric"
+  value={form.yardage}
+  onChange={(e) => update("yardage", e.target.value)}
+  placeholder="Example: 2.5"
+  inputMode="decimal"
   style={inputStyle}
 />
-
-<label style={labelStyle}>Piece Size</label>
-<input
-  value={form.pieceSize}
-  onChange={(e) => update("pieceSize", e.target.value)}
-  placeholder='Example: Fat Quarter, 10" square, 5" charm'
-  style={inputStyle}
-/>
-
-        <label style={labelStyle}>Yardage</label>
-        <input value={form.yardage} onChange={(e) => update("yardage", e.target.value)} placeholder="Example: 2.5" inputMode="decimal" style={inputStyle} />
 
 <label style={labelStyle}>Color</label>
 <input
