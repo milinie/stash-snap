@@ -211,6 +211,23 @@ function AddModal({ onSave, onClose, initialData }) {
   ))}
 </select>
 
+<label style={labelStyle}>Piece Count</label>
+<input
+  value={form.pieceCount}
+  onChange={(e) => update("pieceCount", e.target.value)}
+  placeholder="Example: 21"
+  inputMode="numeric"
+  style={inputStyle}
+/>
+
+<label style={labelStyle}>Piece Size</label>
+<input
+  value={form.pieceSize}
+  onChange={(e) => update("pieceSize", e.target.value)}
+  placeholder='Example: Fat Quarter, 10" square, 5" charm'
+  style={inputStyle}
+/>
+
         <label style={labelStyle}>Yardage</label>
         <input value={form.yardage} onChange={(e) => update("yardage", e.target.value)} placeholder="Example: 2.5" inputMode="decimal" style={inputStyle} />
 
@@ -274,8 +291,13 @@ function FabricCard({ item, onDelete, onEdit }) {
         <div style={{ padding: "12px 14px", flex: 1 }}>
           <h3 style={{ fontSize: 16, color: PALETTE.ink, margin: "0 0 4px" }}>{item.name}</h3>
           <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", margin: 0 }}>
-  {item.fabricType || "Fabric"} · {item.yardage} yds · {item.collection}
-</p>
+
+{item.fabricType || "Fabric"}
+{item.pieceCount ? ` · ${item.pieceCount} pcs` : ""}
+{item.pieceSize ? ` · ${item.pieceSize}` : ""}
+{item.yardage ? ` · ${item.yardage} yds` : ""}
+ · {item.collection}
+
           <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
             <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>✔ {item.color}</span>
             <span style={tagStyle(PALETTE.mist, PALETTE.teal)}>✔ {item.style}</span>
