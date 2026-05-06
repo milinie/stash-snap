@@ -123,7 +123,29 @@ function compressImage(file, maxWidth = 350, quality = 0.35) {
   });
 }
 
-function FabricThumb({ color, style, photo, size = 76 }) {
+function calculateYardageFromPieces(fabricType, pieceCount, pieceSize) {
+  const count = Number(pieceCount) || 0;
+  const type = String(fabricType || "").toLowerCase();
+  const size = String(pieceSize || "").toLowerCase();
+
+  if (count <= 0) return "";
+
+  if (type.includes("fat quarter") || size.includes("fat quarter")) {
+    return count * 0.25;
+  }
+
+  if (type.includes("charm") || size.includes('5"')) {
+    return ((count * 5 * 5) / 1296).toFixed(2);
+  }
+
+  if (type.includes('10"') || type.includes("layer cake") || size.includes('10"')) {
+    return ((count * 10 * 10) / 1296).toFixed(2);
+  }
+
+  return "";
+}
+
+  function FabricThumb({ color, style, photo, size = 76 }) {
   if (photo) {
     return <img src={photo} alt="Fabric" style={{ width: size, height: size, objectFit: "cover", display: "block" }} />;
   }
@@ -205,16 +227,41 @@ function AddModal({ onSave, onClose, initialData }) {
         <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Example: Sage Floral" style={inputStyle} />
 
 <label style={labelStyle}>Fabric Type</label>
-<select value={form.fabricType} onChange={(e) => update("fabricType", e.target.value)} style={inputStyle}>
+
+<select
+  value={form.fabricType}
+  onChange={(e) => {
+    const fabricType = e.target.value;
+    const calculated = calculateYardageFromPieces(fabricType, form.pieceCount, form.pieceSize);
+
+    setForm((prev) => ({
+      ...prev,
+      fabricType,
+      yardage: calculated !== "" ? String(calculated) : prev.yardage
+    }));
+  }}
+  style={inputStyle}
+>
+
   {FABRIC_TYPES.map((type) => (
     <option key={type} value={type}>{type}</option>
   ))}
 </select>
 
 <label style={labelStyle}>Piece Count</label>
+
 <input
   value={form.pieceCount}
-  onChange={(e) => update("pieceCount", e.target.value)}
+  onChange={(e) => {
+    const pieceCount = e.target.value;
+    const calculated = calculateYardageFromPieces(form.fabricType, pieceCount, form.pieceSize);
+
+    setForm((prev) => ({
+      ...prev,
+      pieceCount,
+      yardage: calculated !== "" ? String(calculated) : prev.yardage
+    }));
+  }}
   placeholder="Example: 21"
   inputMode="numeric"
   style={inputStyle}
