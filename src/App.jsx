@@ -300,8 +300,6 @@ function FabricCard({ item, onDelete, onEdit }) {
 
 <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
 
-<div style={{ display: "flex", gap: 4, marginTop: 6 }}>
-
             <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>✔ {item.color}</span>
             <span style={tagStyle(PALETTE.mist, PALETTE.teal)}>✔ {item.style}</span>
           </div>
