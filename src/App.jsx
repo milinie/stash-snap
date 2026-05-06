@@ -290,15 +290,15 @@ function FabricCard({ item, onDelete, onEdit }) {
         <FabricThumb color={item.color} style={item.style} photo={item.photo} />
         <div style={{ padding: "12px 14px", flex: 1 }}>
           <h3 style={{ fontSize: 16, color: PALETTE.ink, margin: "0 0 4px" }}>{item.name}</h3>
-          <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", margin: 0 }}>
-
-<p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", margin: 0 }}>
+     <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", margin: 0 }}>
   {item.fabricType || "Fabric"}
   {item.pieceCount ? ` · ${item.pieceCount} pcs` : ""}
   {item.pieceSize ? ` · ${item.pieceSize}` : ""}
   {item.yardage ? ` · ${item.yardage} yds` : ""}
   {` · ${item.collection}`}
 </p>
+
+<div style={{ display: "flex", gap: 4, marginTop: 6 }}>
 
 <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
 
