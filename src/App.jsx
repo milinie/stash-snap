@@ -27,12 +27,41 @@ const COLOR_TAGS = [
 
 const COLLECTIONS = ["My Stash", "Current Project", "Gifted", "Shop Sample", "Fat Quarters"];
 
-const SAMPLE_STASH = [
-  { id: 1, name: "Garden Party Floral", color: "Rose", style: "Floral", yardage: 2.5, collection: "Current Project", notes: "For quilt border", photo: null, date: "Apr 28" },
-  { id: 2, name: "Sage Blender", color: "Sage", style: "Blender", yardage: 1, collection: "My Stash", notes: "", photo: null, date: "Apr 20" },
-  { id: 3, name: "Honey Geometric", color: "Honey", style: "Geometric", yardage: 3, collection: "Fat Quarters", notes: "Lori Holt style", photo: null, date: "Apr 15" },
-  { id: 4, name: "Cloud Stripe", color: "Cloud", style: "Stripe", yardage: 0.5, collection: "My Stash", notes: "Sashing fabric", photo: null, date: "Apr 10" }
+const FABRIC_TYPES = [
+  "Single Fabric",
+  "Yardage",
+  "Fat Quarter",
+  "Fat Quarter Bundle",
+  '10" Squares',
+  "Charm Pack",
+  "Jelly Roll",
+  "Layer Cake",
+  "Wide Back",
+  "Scrap",
+  "Other"
 ];
+
+const SAMPLE_STASH = [
+  { id: 1, name: "Garden Party Floral", color: "Rose", style: "Floral", fabricType: "Yardage", yardage: 2.5, collection: "Current Project", notes: "For quilt border", photo: null, date: "Apr 28" },
+  { id: 2, name: "Sage Blender", color: "Sage", style: "Blender", fabricType: "Yardage", yardage: 1, collection: "My Stash", notes: "", photo: null, date: "Apr 20" },
+  { id: 3, name: "Honey Geometric", color: "Honey", style: "Geometric", fabricType: "Yardage", yardage: 3, collection: "Fat Quarters", notes: "Lori Holt style", photo: null, date: "Apr 15" },
+  { id: 4, name: "Cloud Stripe", color: "Cloud", style: "Stripe", fabricType: "Yardage", yardage: 0.5, collection: "My Stash", notes: "Sashing fabric", photo: null, date: "Apr 10" }
+];
+
+{
+  id: 5,
+  name: "Lori Holt Berry & Sage Fat Quarter Bundle",
+  color: "Sage",
+  style: "Floral",
+  fabricType: "Fat Quarter Bundle",
+  pieceCount: 21,
+  pieceSize: "Fat Quarter",
+  yardage: 5.25,
+  collection: "My Stash",
+  notes: "21 coordinating prints from Berry & Sage collection",
+  photo: null,
+  date: "May 5"
+}
 
 const BUNDLE_SUGGESTIONS = {
   Rose: ["Sage", "Cream", "Honey", "Cloud"],
