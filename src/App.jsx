@@ -45,23 +45,22 @@ const SAMPLE_STASH = [
   { id: 1, name: "Garden Party Floral", color: "Rose", style: "Floral", fabricType: "Yardage", yardage: 2.5, collection: "Current Project", notes: "For quilt border", photo: null, date: "Apr 28" },
   { id: 2, name: "Sage Blender", color: "Sage", style: "Blender", fabricType: "Yardage", yardage: 1, collection: "My Stash", notes: "", photo: null, date: "Apr 20" },
   { id: 3, name: "Honey Geometric", color: "Honey", style: "Geometric", fabricType: "Yardage", yardage: 3, collection: "Fat Quarters", notes: "Lori Holt style", photo: null, date: "Apr 15" },
-  { id: 4, name: "Cloud Stripe", color: "Cloud", style: "Stripe", fabricType: "Yardage", yardage: 0.5, collection: "My Stash", notes: "Sashing fabric", photo: null, date: "Apr 10" }
+  { id: 4, name: "Cloud Stripe", color: "Cloud", style: "Stripe", fabricType: "Yardage", yardage: 0.5, collection: "My Stash", notes: "Sashing fabric", photo: null, date: "Apr 10" },
+  {
+    id: 5,
+    name: "Lori Holt Berry & Sage Fat Quarter Bundle",
+    color: "Sage",
+    style: "Floral",
+    fabricType: "Fat Quarter Bundle",
+    pieceCount: 21,
+    pieceSize: "Fat Quarter",
+    yardage: 5.25,
+    collection: "My Stash",
+    notes: "21 coordinating prints from Berry & Sage collection",
+    photo: null,
+    date: "May 5"
+  }
 ];
-
-{
-  id: 5,
-  name: "Lori Holt Berry & Sage Fat Quarter Bundle",
-  color: "Sage",
-  style: "Floral",
-  fabricType: "Fat Quarter Bundle",
-  pieceCount: 21,
-  pieceSize: "Fat Quarter",
-  yardage: 5.25,
-  collection: "My Stash",
-  notes: "21 coordinating prints from Berry & Sage collection",
-  photo: null,
-  date: "May 5"
-}
 
 const BUNDLE_SUGGESTIONS = {
   Rose: ["Sage", "Cream", "Honey", "Cloud"],
@@ -139,16 +138,19 @@ function FabricThumb({ color, style, photo, size = 76 }) {
 
 function AddModal({ onSave, onClose, initialData }) {
   const [form, setForm] = useState({
-    id: initialData ? initialData.id : undefined,
-    date: initialData ? initialData.date : undefined,
-    name: initialData ? initialData.name : "",
-    color: initialData ? initialData.color : "Rose",
-    style: initialData ? initialData.style : "Floral",
-    yardage: initialData ? String(initialData.yardage) : "",
-    collection: initialData ? initialData.collection : "My Stash",
-    notes: initialData ? initialData.notes : "",
-    photo: initialData ? initialData.photo : null
-  });
+  id: initialData ? initialData.id : undefined,
+  date: initialData ? initialData.date : undefined,
+  name: initialData ? initialData.name : "",
+  color: initialData ? initialData.color : "Rose",
+  style: initialData ? initialData.style : "Floral",
+  fabricType: initialData ? initialData.fabricType : "Yardage",
+  pieceCount: initialData ? initialData.pieceCount : "",
+  pieceSize: initialData ? initialData.pieceSize : "",
+  yardage: initialData ? String(initialData.yardage) : "",
+  collection: initialData ? initialData.collection : "My Stash",
+  notes: initialData ? initialData.notes : "",
+  photo: initialData ? initialData.photo : null
+});
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -201,6 +203,13 @@ function AddModal({ onSave, onClose, initialData }) {
 
         <label style={labelStyle}>Fabric Name</label>
         <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Example: Sage Floral" style={inputStyle} />
+
+<label style={labelStyle}>Fabric Type</label>
+<select value={form.fabricType} onChange={(e) => update("fabricType", e.target.value)} style={inputStyle}>
+  {FABRIC_TYPES.map((type) => (
+    <option key={type} value={type}>{type}</option>
+  ))}
+</select>
 
         <label style={labelStyle}>Yardage</label>
         <input value={form.yardage} onChange={(e) => update("yardage", e.target.value)} placeholder="Example: 2.5" inputMode="decimal" style={inputStyle} />
@@ -265,8 +274,8 @@ function FabricCard({ item, onDelete, onEdit }) {
         <div style={{ padding: "12px 14px", flex: 1 }}>
           <h3 style={{ fontSize: 16, color: PALETTE.ink, margin: "0 0 4px" }}>{item.name}</h3>
           <p style={{ fontSize: 12, color: "#999", fontFamily: "sans-serif", margin: 0 }}>
-            {item.yardage} yds · {item.collection}
-          </p>
+  {item.fabricType || "Fabric"} · {item.yardage} yds · {item.collection}
+</p>
           <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
             <span style={tagStyle(PALETTE.blush, PALETTE.rose)}>✔ {item.color}</span>
             <span style={tagStyle(PALETTE.mist, PALETTE.teal)}>✔ {item.style}</span>
