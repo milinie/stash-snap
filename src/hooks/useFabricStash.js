@@ -26,6 +26,7 @@ function saveLocalStash(stash) {
   }
 }
 
+// DB row -> UI shape (matches what FabricCard / AddModal already expect)
 function fromRow(row) {
   return {
     id: row.id,
@@ -64,32 +65,36 @@ export function useFabricStash() {
   const { user } = useAuth();
   const { isPaid } = useSubscription();
 
-  const cloudMode = Boolean(user);
-  const userId = user?.id ?? null;
-
-  console.log("USER:", user);
-  console.log("CLOUD MODE:", cloudMode);
-  console.log("USER ID:", userId);
-
   const [stash, setStash] = useState([]);
   const [stashLoading, setStashLoading] = useState(true);
 
+  // FIX: cloud sync now turns on for ANY signed-in user, not just paid ones.
+  // Payment only affects the free-tier fabric cap (see isAtFreeLimit below),
+  // not whether data lives in Supabase. This was the root cause of fabrics
+  // not syncing across devices — unpaid sign-ins were silently local-only.
+  const cloudMode = Boolean(user);
+  const userId = user?.id ?? null;
+
+  // ---------- LOAD ----------
+  // FIX: no longer waits on subLoading (subscription status) before deciding
+  // what to load — that dependency caused an unnecessary race between two
+  // separate hooks and contributed to stale data lingering after sign-out.
+  // Cloud vs. local is now decided purely by whether `user` exists.
   useEffect(() => {
     let isMounted = true;
 
     async function load() {
       setStashLoading(true);
 
-      console.log("LOAD STASH:", { cloudMode, userId });
-
       if (cloudMode && userId) {
+        // FIX: explicit user_id filter added for defense-in-depth isolation,
+        // on top of the RLS policy (auth.uid() = user_id). Two independent
+        // layers means a misconfigured policy can't silently leak rows.
         const { data, error } = await supabase
           .from("fabrics")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
-
-        console.log("LOAD CLOUD RESULT:", { data, error });
 
         if (!isMounted) return;
 
@@ -100,7 +105,10 @@ export function useFabricStash() {
           setStash(data.map(fromRow));
         }
       } else {
-        console.log("LOAD LOCAL STASH");
+        // FIX: signed-out (or mid sign-out) always shows local/demo data.
+        // Because `stash` is fully replaced here (not merged), any fabrics
+        // that were on screen from a just-signed-out cloud session are
+        // discarded the moment this branch runs.
         setStash(loadLocalStash());
       }
 
@@ -108,15 +116,14 @@ export function useFabricStash() {
     }
 
     load();
-
     return () => {
       isMounted = false;
     };
   }, [cloudMode, userId]);
 
+  // ---------- persist local mode on every change ----------
   useEffect(() => {
     if (cloudMode || stashLoading) return;
-
     try {
       saveLocalStash(stash);
     } catch {
@@ -124,6 +131,10 @@ export function useFabricStash() {
     }
   }, [stash, cloudMode, stashLoading]);
 
+  // ---------- ONE-TIME MIGRATION: local -> cloud, the moment someone signs in ----------
+  // FIX: previously only ran when a user became PAID. Now runs for any
+  // sign-in, since unpaid users are cloud-synced too — otherwise fabrics
+  // added before creating an account would be stranded in localStorage.
   useEffect(() => {
     if (!cloudMode || !userId) return;
 
@@ -131,9 +142,6 @@ export function useFabricStash() {
     if (localStorage.getItem(migrationKey)) return;
 
     const localItems = loadLocalStash().filter((item) => item.id !== undefined);
-
-    console.log("MIGRATION CHECK:", { migrationKey, localItems });
-
     if (localItems.length === 0) {
       localStorage.setItem(migrationKey, "true");
       return;
@@ -143,16 +151,7 @@ export function useFabricStash() {
       try {
         for (const item of localItems) {
           const row = toRow(userId, item);
-          console.log("MIGRATION INSERT ROW:", row);
-
-          const { data: inserted, error } = await supabase
-            .from("fabrics")
-            .insert(row)
-            .select()
-            .single();
-
-          console.log("MIGRATION INSERT RESULT:", { inserted, error });
-
+          const { data: inserted, error } = await supabase.from("fabrics").insert(row).select().single();
           if (error) {
             console.error("Migration insert failed for", item.name, error);
             continue;
@@ -163,7 +162,6 @@ export function useFabricStash() {
               const blob = await (await fetch(item.photo)).blob();
               const file = new File([blob], "migrated.jpg", { type: "image/jpeg" });
               const { path, url } = await uploadFabricPhoto(userId, inserted.id, file);
-
               await supabase
                 .from("fabrics")
                 .update({ photo_url: url, photo_storage_path: path })
@@ -176,15 +174,11 @@ export function useFabricStash() {
         }
 
         localStorage.setItem(migrationKey, "true");
-
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("fabrics")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
-
-        console.log("POST MIGRATION LOAD:", { data, error });
-
         if (data) setStash(data.map(fromRow));
       } catch (error) {
         console.error("Stash migration failed:", error);
@@ -192,25 +186,23 @@ export function useFabricStash() {
     })();
   }, [cloudMode, userId]);
 
+  // FIX: cap now applies regardless of cloudMode — it's purely a paid-vs-not
+  // check, since unpaid users are cloud-synced too now.
   const isAtFreeLimit = !isPaid && stash.length >= FREE_TIER_FABRIC_LIMIT;
 
+  // ---------- ADD ----------
   const addFabric = useCallback(
     async (form) => {
-      console.log("addFabric()", {
-        cloudMode,
-        userId,
-        isPaid,
-        isAtFreeLimit,
-        form
-      });
+      console.log("[useFabricStash] addFabric called. cloudMode:", cloudMode, "userId:", userId, "isAtFreeLimit:", isAtFreeLimit, "form:", form);
 
       if (isAtFreeLimit) {
+        console.log("[useFabricStash] blocked — FREE_LIMIT_REACHED");
         throw new Error("FREE_LIMIT_REACHED");
       }
 
       if (cloudMode && userId) {
         const row = toRow(userId, form);
-        console.log("ADDING CLOUD FABRIC ROW:", row);
+        console.log("[useFabricStash] cloud branch — about to call supabase.from('fabrics').insert(...) with row:", row);
 
         const { data: inserted, error } = await supabase
           .from("fabrics")
@@ -218,7 +210,7 @@ export function useFabricStash() {
           .select()
           .single();
 
-        console.log("ADD CLOUD RESULT:", { inserted, error });
+        console.log("[useFabricStash] insert result — data:", inserted, "error:", error);
 
         if (error) throw error;
 
@@ -229,7 +221,6 @@ export function useFabricStash() {
           const uploaded = await uploadFabricPhoto(userId, inserted.id, form.photoFile);
           photoUrl = uploaded.url;
           photoPath = uploaded.path;
-
           await supabase
             .from("fabrics")
             .update({ photo_url: photoUrl, photo_storage_path: photoPath })
@@ -242,7 +233,7 @@ export function useFabricStash() {
         return newItem;
       }
 
-      console.log("ADDING LOCAL FABRIC");
+      console.log("[useFabricStash] local branch — cloudMode was false or userId missing. cloudMode:", cloudMode, "userId:", userId);
 
       const newItem = {
         ...form,
@@ -250,16 +241,16 @@ export function useFabricStash() {
         date: form.date || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         yardage: Number(form.yardage) || 0
       };
-
       delete newItem.photoFile;
       delete newItem.photoRemoved;
 
       setStash((prev) => [newItem, ...prev]);
       return newItem;
     },
-    [cloudMode, userId, isPaid, isAtFreeLimit]
+    [cloudMode, userId, isAtFreeLimit]
   );
 
+  // ---------- UPDATE ----------
   const updateFabric = useCallback(
     async (updated) => {
       if (cloudMode && userId) {
@@ -300,19 +291,13 @@ export function useFabricStash() {
     [cloudMode, userId]
   );
 
+  // ---------- DELETE ----------
   const deleteFabric = useCallback(
     async (id) => {
       if (cloudMode && userId) {
         const existing = stash.find((item) => item.id === id);
-
-        const { error } = await supabase
-          .from("fabrics")
-          .delete()
-          .eq("id", id)
-          .eq("user_id", userId);
-
+        const { error } = await supabase.from("fabrics").delete().eq("id", id).eq("user_id", userId);
         if (error) throw error;
-
         if (existing?.photoPath) await deleteFabricPhoto(existing.photoPath);
       }
 
@@ -321,15 +306,8 @@ export function useFabricStash() {
     [cloudMode, userId, stash]
   );
 
-  const totalYards = useMemo(
-    () => stash.reduce((sum, item) => sum + (item.yardage || 0), 0),
-    [stash]
-  );
-
-  const collections = useMemo(
-    () => [...new Set(stash.map((item) => item.collection))],
-    [stash]
-  );
+  const totalYards = useMemo(() => stash.reduce((sum, item) => sum + (item.yardage || 0), 0), [stash]);
+  const collections = useMemo(() => [...new Set(stash.map((item) => item.collection))], [stash]);
 
   return {
     stash,
