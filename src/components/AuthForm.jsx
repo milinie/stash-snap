@@ -4,12 +4,31 @@ import { inputStyle, labelStyle } from "../lib/styles";
 import { useAuth } from "../hooks/useAuth";
 
 export function AuthForm({ onDone }) {
-  const { signIn, signUp, signInWithMagicLink } = useAuth();
+  const { signIn, signUp, signInWithMagicLink, resetPassword } = useAuth();
   const [mode, setMode] = useState("signin"); // signin | signup | magic
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState(null); // { type: 'error'|'success', message }
   const [busy, setBusy] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setStatus({ type: "error", message: "Enter your email above first, then tap \"Forgot password?\"." });
+      return;
+    }
+
+    setStatus(null);
+    setBusy(true);
+    try {
+      const { error } = await resetPassword(email);
+      if (error) throw error;
+      setStatus({ type: "success", message: "Check your email for a link to reset your password." });
+    } catch (error) {
+      setStatus({ type: "error", message: error.message || "Something went wrong." });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,6 +109,28 @@ export function AuthForm({ onDone }) {
             placeholder="At least 6 characters"
           />
         </>
+      )}
+
+      {mode === "signin" && (
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          disabled={busy}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            marginTop: -10,
+            marginBottom: 16,
+            fontSize: 12,
+            fontFamily: "sans-serif",
+            color: PALETTE.teal,
+            textDecoration: "underline",
+            cursor: busy ? "default" : "pointer"
+          }}
+        >
+          Forgot password?
+        </button>
       )}
 
       {status && (
