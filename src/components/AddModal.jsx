@@ -61,6 +61,8 @@ export function AddModal({ onSave, onClose, initialData }) {
 
   const canSave = form.name.trim() !== "" && String(form.yardage).trim() !== "" && !saving;
 
+  console.log("[AddModal] render — canSave:", canSave, "name:", JSON.stringify(form.name), "yardage:", JSON.stringify(form.yardage), "saving:", saving);
+
   const showPieceFields = PIECE_FIELD_TYPES.includes(form.fabricType);
 
   const handleFabricTypeChange = (e) => {
@@ -97,14 +99,21 @@ export function AddModal({ onSave, onClose, initialData }) {
   };
 
   const handleSubmit = async () => {
+    console.log("[AddModal] handleSubmit fired. form:", form);
     setSaving(true);
     try {
-      await onSave({
+      const payload = {
         ...form,
         id: form.id || Date.now(),
         date: form.date || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         yardage: parseFloat(form.yardage) || 0
-      });
+      };
+      console.log("[AddModal] calling onSave with payload:", payload);
+      await onSave(payload);
+      console.log("[AddModal] onSave resolved successfully");
+    } catch (error) {
+      console.error("[AddModal] onSave threw:", error);
+      throw error;
     } finally {
       setSaving(false);
     }
