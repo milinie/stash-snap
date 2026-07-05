@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { PALETTE, APP_WIDTH } from "../lib/constants";
-import { useAuth } from "../hooks/useAuth";
-import { useSubscription } from "../hooks/useSubscription";
-import { AuthForm } from "../components/AuthForm";
-import { LoadingSpinner } from "../components/LoadingSpinner";
+import { PALETTE, APP_WIDTH } from "./lib/constants";
+import { useAuth } from "./hooks/useAuth";
+import { useSubscription } from "./hooks/useSubscription";
+import { AuthForm } from "./components/AuthForm";
+import { LoadingSpinner } from "./components/LoadingSpinner";
 
 const PRICE_MONTHLY = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
 const PRICE_ANNUAL = import.meta.env.VITE_STRIPE_PRICE_ANNUAL;
