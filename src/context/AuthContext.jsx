@@ -11,14 +11,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let isMounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      console.log("[AuthContext] getSession() on mount — session:", data.session, "error:", error);
       if (!isMounted) return;
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setAuthLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      console.log("[AuthContext] onAuthStateChange — event:", event, "session:", nextSession);
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setAuthLoading(false);

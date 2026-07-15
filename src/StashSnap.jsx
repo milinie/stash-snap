@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import WelcomeBetaModal from "./components/WelcomeBetaModal";
+import { useBetaWelcome } from "./hooks/useBetaWelcome";
 import { PALETTE, COLLECTIONS, COLOR_TAGS, STYLE_TAGS } from "./lib/constants";
 import { analyzeBundle, autoBuildBundle, mapMissingToFilter } from "./lib/bundleLogic";
 import {
@@ -41,6 +43,7 @@ import { useBundles } from "./hooks/useBundles";
 
 export function StashSnap({ onOpenAccount }) {
   const { user } = useAuth();
+  const { showWelcome, dismissWelcome } = useBetaWelcome(user);
   const {
     stash,
     stashLoading,
@@ -102,11 +105,14 @@ export function StashSnap({ onOpenAccount }) {
   };
 
   const handleSave = async (form) => {
+    console.log("[StashSnap] handleSave fired. form:", form);
     try {
-      await addFabric(form);
+      const result = await addFabric(form);
+      console.log("[StashSnap] addFabric resolved:", result);
       setAdding(false);
       showToast("✅ Added to your stash!");
     } catch (error) {
+      console.error("[StashSnap] addFabric threw:", error);
       if (error.message === "FREE_LIMIT_REACHED") {
         setAdding(false);
         onOpenAccount();
@@ -166,6 +172,11 @@ export function StashSnap({ onOpenAccount }) {
   };
 
   return (
+  <>
+    <WelcomeBetaModal
+      open={showWelcome}
+      onStartExploring={dismissWelcome}
+    />
     <div style={{ minHeight: "100vh", background: PALETTE.cream, fontFamily: "Georgia, serif", width: "100%" }}>
       <header style={headerStyle}>
         <div style={contentWrap}>
@@ -432,6 +443,7 @@ export function StashSnap({ onOpenAccount }) {
       {adding && <AddModal onSave={handleSave} onClose={() => setAdding(false)} />}
       {editingItem && <AddModal initialData={editingItem} onSave={handleUpdate} onClose={() => setEditingItem(null)} />}
       <Toast message={toast} />
-    </div>
-  );
+        </div>
+  </>
+);
 }
