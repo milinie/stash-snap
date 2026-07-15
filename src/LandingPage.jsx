@@ -4,7 +4,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useSubscription } from "./hooks/useSubscription";
 import { AuthForm } from "./components/AuthForm";
 import { LoadingSpinner } from "./components/LoadingSpinner";
-import { BETA_FEEDBACK_URL } from "./constants/betaFeedback";
+import { BETA_FEEDBACK_URL } from "./lib/betaFeedback";
 
 const PRICE_MONTHLY = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
 const PRICE_ANNUAL = import.meta.env.VITE_STRIPE_PRICE_ANNUAL;

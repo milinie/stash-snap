@@ -8,7 +8,7 @@
 //   <WelcomeBetaModal open={showWelcome} onStartExploring={handleDismiss} />
 
 import React, { useEffect, useRef } from "react";
-import { BETA_FEEDBACK_URL } from "../constants/betaFeedback";
+import { BETA_FEEDBACK_URL } from "../lib/betaFeedback";
 
 export default function WelcomeBetaModal({ open, onStartExploring }) {
   const dialogRef = useRef(null);
