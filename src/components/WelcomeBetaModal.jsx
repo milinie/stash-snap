@@ -9,7 +9,7 @@
 
 import React, { useEffect, useRef } from "react";
 
-const FEEDBACK_URL = "https://forms.gle/REPLACE-ME";
+const FEEDBACK_URL = "https://www.jotform.com/261952803608057";
 
 export default function WelcomeBetaModal({ open, onStartExploring }) {
   const dialogRef = useRef(null);
