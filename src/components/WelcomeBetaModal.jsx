@@ -8,8 +8,7 @@
 //   <WelcomeBetaModal open={showWelcome} onStartExploring={handleDismiss} />
 
 import React, { useEffect, useRef } from "react";
-
-const FEEDBACK_URL = "https://www.jotform.com/261952803608057";
+import { BETA_FEEDBACK_URL } from "../constants/betaFeedback";
 
 export default function WelcomeBetaModal({ open, onStartExploring }) {
   const dialogRef = useRef(null);
@@ -51,7 +50,7 @@ export default function WelcomeBetaModal({ open, onStartExploring }) {
   if (!open) return null;
 
   const handleSendFeedback = () => {
-    window.open(FEEDBACK_URL, "_blank", "noopener,noreferrer");
+   window.open(BETA_FEEDBACK_URL, "_blank", "noopener,noreferrer");
   };
 
   return (

@@ -4,6 +4,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useSubscription } from "./hooks/useSubscription";
 import { AuthForm } from "./components/AuthForm";
 import { LoadingSpinner } from "./components/LoadingSpinner";
+import { BETA_FEEDBACK_URL } from "./constants/betaFeedback";
 
 const PRICE_MONTHLY = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
 const PRICE_ANNUAL = import.meta.env.VITE_STRIPE_PRICE_ANNUAL;
@@ -150,13 +151,42 @@ export function LandingPage() {
               </>
             )}
           </div>
+         <div style={{ background: "white", borderRadius: 16, padding: 18, marginBottom: 16 }}>
+  <p style={{ margin: "0 0 10px", fontFamily: "sans-serif", fontSize: 13 }}>
+    Stash Snap is in beta — your feedback helps shape what we build next.
+  </p>
 
-          <button
-            onClick={signOut}
-            style={{ border: "1px solid #f0c8c0", background: "none", color: PALETTE.rose, borderRadius: 8, padding: "8px 14px", fontSize: 13, fontFamily: "sans-serif", cursor: "pointer" }}
-          >
-            Sign Out
-          </button>
+  <button
+    onClick={() =>
+      window.open(BETA_FEEDBACK_URL, "_blank", "noopener,noreferrer")
+    }
+    style={{
+      border: `1px solid ${PALETTE.blush}`,
+      background: "white",
+      borderRadius: 8,
+      padding: "8px 14px",
+      fontSize: 13,
+      fontFamily: "sans-serif",
+      fontWeight: 700,
+      color: PALETTE.teal,
+      cursor: "pointer",
+    }}
+  >
+    Send Beta Feedback
+  </button>
+</div>
+
+<button
+  onClick={signOut}
+  style={{
+    border: "1px solid #f0c8c0",
+    background: "none",
+    color: PALETTE.rose,
+    borderRadius: 8,
+  }}
+>
+  Sign Out
+</button>
         </div>
       )}
     </div>
