@@ -16,8 +16,18 @@ function saveLocalBundles(bundles) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(bundles));
 }
 
+function rowsToBundles(rows, stash) {
+  const stashById = new Map(stash.map((item) => [item.id, item]));
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    fabrics: row.fabric_ids.map((fid) => stashById.get(fid)).filter(Boolean)
+  }));
+}
+
 export function useBundles({ cloudMode, stash }) {
-  const { user } = useAuth();
+  const { user, refreshSignal } = useAuth();
+  const userId = user?.id ?? null;
   const [savedBundles, setSavedBundles] = useState([]);
   const [bundlesLoading, setBundlesLoading] = useState(true);
 
@@ -27,10 +37,11 @@ export function useBundles({ cloudMode, stash }) {
     async function load() {
       setBundlesLoading(true);
 
-      if (cloudMode) {
+      if (cloudMode && userId) {
         const { data, error } = await supabase
           .from("bundles")
           .select("*")
+          .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
         if (!isMounted) return;
@@ -39,14 +50,7 @@ export function useBundles({ cloudMode, stash }) {
           console.error("Failed to load cloud bundles:", error);
           setSavedBundles([]);
         } else {
-          const stashById = new Map(stash.map((item) => [item.id, item]));
-          setSavedBundles(
-            data.map((row) => ({
-              id: row.id,
-              name: row.name,
-              fabrics: row.fabric_ids.map((fid) => stashById.get(fid)).filter(Boolean)
-            }))
-          );
+          setSavedBundles(rowsToBundles(data, stash));
         }
       } else {
         setSavedBundles(loadLocalBundles());
@@ -59,16 +63,16 @@ export function useBundles({ cloudMode, stash }) {
     return () => {
       isMounted = false;
     };
-  }, [cloudMode, stash]);
+  }, [cloudMode, userId, refreshSignal, stash]);
 
   const saveBundle = useCallback(
     async (designWall) => {
       const name = `Bundle ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 
-      if (cloudMode) {
+      if (cloudMode && userId) {
         const { data, error } = await supabase
           .from("bundles")
-          .insert({ user_id: user.id, name, fabric_ids: designWall.map((f) => f.id) })
+          .insert({ user_id: userId, name, fabric_ids: designWall.map((f) => f.id) })
           .select()
           .single();
 
@@ -85,22 +89,74 @@ export function useBundles({ cloudMode, stash }) {
       saveLocalBundles(updated);
       return newBundle;
     },
-    [cloudMode, user, savedBundles]
+    [cloudMode, userId, savedBundles]
   );
 
   const deleteBundle = useCallback(
     async (id) => {
-      if (cloudMode) {
-        const { error } = await supabase.from("bundles").delete().eq("id", id);
-        if (error) throw error;
+      if (cloudMode && userId) {
+        const { data: deletedRows, error } = await supabase
+          .from("bundles")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", userId)
+          .select();
+
+        if (error) {
+          console.error("Delete failed for bundle", id, error);
+          return { error };
+        }
+
+        if (!deletedRows || deletedRows.length === 0) {
+          const silentFailError = new Error(
+            "Delete affected 0 rows — likely blocked by a missing/misconfigured RLS DELETE policy on public.bundles, or the bundle no longer belongs to this user."
+          );
+          console.error("Delete silently failed for bundle", id, silentFailError);
+          return { error: silentFailError };
+        }
+
+        const updated = savedBundles.filter((bundle) => bundle.id !== id);
+        setSavedBundles(updated);
+        return { error: null };
       }
 
       const updated = savedBundles.filter((bundle) => bundle.id !== id);
       setSavedBundles(updated);
-      if (!cloudMode) saveLocalBundles(updated);
+      saveLocalBundles(updated);
+      return { error: null };
     },
-    [cloudMode, savedBundles]
+    [cloudMode, userId, savedBundles]
   );
 
-  return { savedBundles, bundlesLoading, saveBundle, deleteBundle };
+  // ---------- REFRESH FROM CLOUD ----------
+  // Manually re-pulls this user's bundles from Supabase and replaces local
+  // state entirely. Takes the current `stash` as a parameter (rather than
+  // relying on the closed-over value) so callers doing a combined
+  // "refresh everything" can pass in freshly-refreshed fabric data,
+  // ensuring bundle fabric references resolve against up-to-date fabrics
+  // rather than a stale stash from before the refresh.
+  const refreshFromCloud = useCallback(
+    async (freshStash) => {
+      if (!cloudMode || !userId) {
+        return { error: new Error("refreshFromCloud called while not signed in.") };
+      }
+
+      const { data, error } = await supabase
+        .from("bundles")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("refreshFromCloud (bundles) failed:", error);
+        return { error };
+      }
+
+      setSavedBundles(rowsToBundles(data, freshStash ?? stash));
+      return { error: null };
+    },
+    [cloudMode, userId, stash]
+  );
+
+  return { savedBundles, bundlesLoading, saveBundle, deleteBundle, refreshFromCloud };
 }

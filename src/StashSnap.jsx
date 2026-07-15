@@ -54,9 +54,16 @@ export function StashSnap({ onOpenAccount }) {
     collections,
     addFabric,
     updateFabric,
-    deleteFabric
+    deleteFabric,
+    refreshFromCloud: refreshFabricsFromCloud
   } = useFabricStash();
-  const { savedBundles, bundlesLoading, saveBundle, deleteBundle } = useBundles({ cloudMode, stash });
+  const {
+    savedBundles,
+    bundlesLoading,
+    saveBundle,
+    deleteBundle,
+    refreshFromCloud: refreshBundlesFromCloud
+  } = useBundles({ cloudMode, stash });
 
   const [activeTab, setActiveTab] = useState("stash");
   const [adding, setAdding] = useState(false);
@@ -69,6 +76,8 @@ export function StashSnap({ onOpenAccount }) {
   const [designWall, setDesignWall] = useState([]);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(null);
+  const [cloudRefreshing, setCloudRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
 
   useEffect(() => {
     document.body.style.margin = "0";
@@ -104,46 +113,61 @@ export function StashSnap({ onOpenAccount }) {
     setTimeout(() => setToast(null), 2500);
   };
 
+  // FIX: addFabric now returns { data, error } instead of throwing
+  // (including for the free-tier limit case, now reported as error.code).
   const handleSave = async (form) => {
-    console.log("[StashSnap] handleSave fired. form:", form);
-    try {
-      const result = await addFabric(form);
-      console.log("[StashSnap] addFabric resolved:", result);
-      setAdding(false);
-      showToast("✅ Added to your stash!");
-    } catch (error) {
-      console.error("[StashSnap] addFabric threw:", error);
-      if (error.message === "FREE_LIMIT_REACHED") {
+    const { data, error } = await addFabric(form);
+
+    if (error) {
+      if (error.code === "FREE_LIMIT_REACHED") {
         setAdding(false);
         onOpenAccount();
       } else {
-        console.error(error);
+        console.error("[StashSnap] addFabric failed:", error);
         showToast("Something went wrong saving that fabric.");
       }
+      return;
     }
+
+    setAdding(false);
+    showToast("✅ Added to your stash!");
   };
 
+  // FIX: updateFabric now returns { data, error } instead of throwing, and
+  // `data` is the row Postgres actually confirmed (via .select().single()),
+  // not the locally-typed form — this is the fix for edits not persisting
+  // across devices. designWall is now synced from that confirmed row too.
   const handleUpdate = async (updated) => {
-    try {
-      const merged = await updateFabric(updated);
-      setDesignWall((prev) => prev.map((item) => (item.id === merged.id ? { ...item, ...merged } : item)));
-      setEditingItem(null);
-      showToast("✏️ Fabric updated!");
-    } catch (error) {
-      console.error(error);
+    const { data, error } = await updateFabric(updated);
+
+    if (error) {
+      console.error("[StashSnap] updateFabric failed:", error);
       showToast("Something went wrong updating that fabric.");
+      return;
     }
+
+    setDesignWall((prev) => prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)));
+    setEditingItem(null);
+    showToast("✏️ Fabric updated!");
   };
 
+  // FIX: deleteFabric now returns { error } instead of throwing, so this
+  // checks that return value directly rather than relying on a caught
+  // exception. This also means a delete that Supabase silently blocked
+  // (e.g. missing RLS DELETE policy — zero rows affected, no thrown error)
+  // now correctly surfaces as a failure here, keeps the fabric visible,
+  // and shows an error toast instead of falsely reporting success.
   const handleDelete = async (id) => {
-    try {
-      await deleteFabric(id);
-      setDesignWall((prev) => prev.filter((item) => item.id !== id));
-      showToast("Removed from stash");
-    } catch (error) {
-      console.error(error);
-      showToast("Could not remove that fabric.");
+    const { error } = await deleteFabric(id);
+
+    if (error) {
+      console.error("[StashSnap] deleteFabric failed:", error);
+      showToast("Could not remove that fabric. Please try again.");
+      return;
     }
+
+    setDesignWall((prev) => prev.filter((item) => item.id !== id));
+    showToast("Removed from stash");
   };
 
   const handleSaveBundle = async () => {
@@ -161,14 +185,50 @@ export function StashSnap({ onOpenAccount }) {
     }
   };
 
+  // FIX: deleteBundle now returns { error } instead of throwing, matching
+  // the same fix applied to deleteFabric — checks the return value here
+  // rather than a caught exception, so an RLS-blocked delete (0 rows
+  // affected, no thrown error) correctly surfaces as a failure.
   const handleDeleteBundle = async (id) => {
-    try {
-      await deleteBundle(id);
-      showToast("Bundle deleted");
-    } catch (error) {
-      console.error(error);
+    const { error } = await deleteBundle(id);
+
+    if (error) {
+      console.error("[StashSnap] deleteBundle failed:", error);
       showToast("Could not delete that bundle.");
+      return;
     }
+
+    showToast("Bundle deleted");
+  };
+
+  // Refreshes fabrics first, then bundles — passing the freshly-fetched
+  // fabric data directly into the bundles refresh, since bundles resolve
+  // their fabric_ids against a fabric list, and the component's own
+  // `stash` state variable won't reflect the fabrics refresh until the
+  // next render (stale-closure risk otherwise).
+  const handleRefreshFromCloud = async () => {
+    setCloudRefreshing(true);
+
+    const { data: freshStash, error: fabricsError } = await refreshFabricsFromCloud();
+
+    if (fabricsError) {
+      console.error("[StashSnap] refreshFabricsFromCloud failed:", fabricsError);
+      showToast("Could not refresh from cloud.");
+      setCloudRefreshing(false);
+      return;
+    }
+
+    const { error: bundlesError } = await refreshBundlesFromCloud(freshStash);
+    setCloudRefreshing(false);
+
+    if (bundlesError) {
+      console.error("[StashSnap] refreshBundlesFromCloud failed:", bundlesError);
+      showToast("Fabrics refreshed, but bundles could not be refreshed.");
+      return;
+    }
+
+    setLastRefreshedAt(new Date());
+    showToast("☁️ Refreshed from cloud");
   };
 
   return (
@@ -221,9 +281,31 @@ export function StashSnap({ onOpenAccount }) {
           </div>
 
           {cloudMode && (
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "sans-serif", marginTop: 10, marginBottom: 0 }}>
-              ☁️ Synced across your devices
-            </p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10, flexWrap: "wrap", gap: 8 }}>
+              <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "sans-serif", margin: 0 }}>
+                ☁️ Synced across your devices
+                {lastRefreshedAt && (
+                  <> · Last refreshed {lastRefreshedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</>
+                )}
+              </p>
+              <button
+                onClick={handleRefreshFromCloud}
+                disabled={cloudRefreshing}
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  border: "none",
+                  borderRadius: 20,
+                  padding: "5px 12px",
+                  color: "white",
+                  fontSize: 11,
+                  fontFamily: "sans-serif",
+                  cursor: cloudRefreshing ? "default" : "pointer",
+                  opacity: cloudRefreshing ? 0.7 : 1
+                }}
+              >
+                {cloudRefreshing ? "Refreshing…" : "🔄 Refresh from Cloud"}
+              </button>
+            </div>
           )}
         </div>
       </header>
