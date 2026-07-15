@@ -3,54 +3,145 @@ import { PALETTE } from "../lib/constants";
 import { inputStyle, labelStyle } from "../lib/styles";
 import { useAuth } from "../hooks/useAuth";
 
+function getErrorMessage(
+  error,
+  fallback = "Something went wrong. Please try again."
+) {
+  if (typeof error === "string" && error.trim()) {
+    return error;
+  }
+
+  if (
+    typeof error?.message === "string" &&
+    error.message.trim() &&
+    error.message !== "{}"
+  ) {
+    return error.message;
+  }
+
+  if (
+    typeof error?.error_description === "string" &&
+    error.error_description.trim()
+  ) {
+    return error.error_description;
+  }
+
+  return fallback;
+}
+
 export function AuthForm({ onDone }) {
   const { signIn, signUp, signInWithMagicLink, resetPassword } = useAuth();
-  const [mode, setMode] = useState("signin"); // signin | signup | magic
+
+  const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState(null); // { type: 'error'|'success', message }
+  const [status, setStatus] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  const handleModeChange = (nextMode) => {
+    setMode(nextMode);
+    setStatus(null);
+  };
+
   const handleForgotPassword = async () => {
-    if (!email) {
-      setStatus({ type: "error", message: "Enter your email above first, then tap \"Forgot password?\"." });
+    if (!email.trim()) {
+      setStatus({
+        type: "error",
+        message:
+          'Enter your email above first, then tap "Forgot password?".',
+      });
       return;
     }
 
     setStatus(null);
     setBusy(true);
+
     try {
-      const { error } = await resetPassword(email);
-      if (error) throw error;
-      setStatus({ type: "success", message: "Check your email for a link to reset your password." });
+      const { error } = await resetPassword(email.trim());
+
+      if (error) {
+        throw error;
+      }
+
+      setStatus({
+        type: "success",
+        message: "Check your email for a link to reset your password.",
+      });
     } catch (error) {
-      setStatus({ type: "error", message: error.message || "Something went wrong." });
+      console.error("Password reset error:", error);
+
+      setStatus({
+        type: "error",
+        message: getErrorMessage(
+          error,
+          "Could not send the password reset email. Please try again."
+        ),
+      });
     } finally {
       setBusy(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setStatus(null);
     setBusy(true);
 
     try {
+      const trimmedEmail = email.trim();
+
       if (mode === "magic") {
-        const { error } = await signInWithMagicLink(email);
-        if (error) throw error;
-        setStatus({ type: "success", message: "Check your email for a sign-in link." });
-      } else if (mode === "signup") {
-        const { error } = await signUp(email, password);
-        if (error) throw error;
-        setStatus({ type: "success", message: "Account created! Check your email to confirm, then sign in." });
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
-        onDone?.();
+        const { error } = await signInWithMagicLink(trimmedEmail);
+
+        if (error) {
+          throw error;
+        }
+
+        setStatus({
+          type: "success",
+          message: "Check your email for a sign-in link.",
+        });
+
+        return;
       }
+
+      if (mode === "signup") {
+        const { error } = await signUp(trimmedEmail, password);
+
+        if (error) {
+          throw error;
+        }
+
+        setStatus({
+          type: "success",
+          message:
+            "Account created! Check your email to confirm, then sign in.",
+        });
+
+        return;
+      }
+
+      const { error } = await signIn(trimmedEmail, password);
+
+      if (error) {
+        throw error;
+      }
+
+      onDone?.();
     } catch (error) {
-      setStatus({ type: "error", message: error.message || "Something went wrong." });
+      console.error("Authentication error:", error);
+
+      const fallback =
+        mode === "magic"
+          ? "Could not send the magic link. Please try again."
+          : mode === "signup"
+            ? "Could not create the account. Please try again."
+            : "Could not sign in. Please check your email and password.";
+
+      setStatus({
+        type: "error",
+        message: getErrorMessage(error, fallback),
+      });
     } finally {
       setBusy(false);
     }
@@ -62,23 +153,25 @@ export function AuthForm({ onDone }) {
         {[
           ["signin", "Sign In"],
           ["signup", "Sign Up"],
-          ["magic", "Magic Link"]
+          ["magic", "Magic Link"],
         ].map(([id, label]) => (
           <button
             key={id}
             type="button"
-            onClick={() => { setMode(id); setStatus(null); }}
+            onClick={() => handleModeChange(id)}
             style={{
               flex: 1,
               padding: "8px 4px",
               borderRadius: 8,
-              border: `1.5px solid ${mode === id ? PALETTE.teal : PALETTE.blush}`,
+              border: `1.5px solid ${
+                mode === id ? PALETTE.teal : PALETTE.blush
+              }`,
               background: mode === id ? PALETTE.teal : "white",
               color: mode === id ? "white" : PALETTE.ink,
               fontSize: 12,
               fontFamily: "sans-serif",
               fontWeight: 700,
-              cursor: "pointer"
+              cursor: "pointer",
             }}
           >
             {label}
@@ -87,11 +180,13 @@ export function AuthForm({ onDone }) {
       </div>
 
       <label style={labelStyle}>Email</label>
+
       <input
         type="email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(event) => setEmail(event.target.value)}
         required
+        autoComplete="email"
         style={inputStyle}
         placeholder="you@example.com"
       />
@@ -99,12 +194,16 @@ export function AuthForm({ onDone }) {
       {mode !== "magic" && (
         <>
           <label style={labelStyle}>Password</label>
+
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
             required
             minLength={6}
+            autoComplete={
+              mode === "signup" ? "new-password" : "current-password"
+            }
             style={inputStyle}
             placeholder="At least 6 characters"
           />
@@ -126,7 +225,7 @@ export function AuthForm({ onDone }) {
             fontFamily: "sans-serif",
             color: PALETTE.teal,
             textDecoration: "underline",
-            cursor: busy ? "default" : "pointer"
+            cursor: busy ? "default" : "pointer",
           }}
         >
           Forgot password?
@@ -135,15 +234,18 @@ export function AuthForm({ onDone }) {
 
       {status && (
         <p
+          role={status.type === "error" ? "alert" : "status"}
           style={{
             fontSize: 13,
             fontFamily: "sans-serif",
             color: status.type === "error" ? "#c0392b" : PALETTE.teal,
             marginTop: -6,
-            marginBottom: 12
+            marginBottom: 12,
           }}
         >
-          {status.message}
+          {typeof status.message === "string"
+            ? status.message
+            : "Something went wrong. Please try again."}
         </p>
       )}
 
@@ -159,10 +261,16 @@ export function AuthForm({ onDone }) {
           color: "white",
           background: `linear-gradient(135deg, ${PALETTE.teal}, ${PALETTE.sage})`,
           opacity: busy ? 0.6 : 1,
-          cursor: busy ? "default" : "pointer"
+          cursor: busy ? "default" : "pointer",
         }}
       >
-        {busy ? "Please wait..." : mode === "signup" ? "Create Account" : mode === "magic" ? "Send Magic Link" : "Sign In"}
+        {busy
+          ? "Please wait..."
+          : mode === "signup"
+            ? "Create Account"
+            : mode === "magic"
+              ? "Send Magic Link"
+              : "Sign In"}
       </button>
     </form>
   );
