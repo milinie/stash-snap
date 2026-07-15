@@ -5,6 +5,7 @@ import { useSubscription } from "./hooks/useSubscription";
 import { AuthForm } from "./components/AuthForm";
 import { LoadingSpinner } from "./components/LoadingSpinner";
 import { BETA_FEEDBACK_URL } from "./lib/betaFeedback";
+import { supabase } from "./lib/supabaseClient";
 
 const PRICE_MONTHLY = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
 const PRICE_ANNUAL = import.meta.env.VITE_STRIPE_PRICE_ANNUAL;
@@ -35,6 +36,110 @@ async function redirectToPortal(customerId) {
   } else {
     alert(data.error || "Could not open billing portal.");
   }
+}
+function SetPasswordSection() {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [status, setStatus] = useState(null); // { type: "success" | "error", message: string }
+  const [busy, setBusy] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus(null);
+
+    if (newPassword.length < 8) {
+      setStatus({ type: "error", message: "Password must be at least 8 characters." });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setStatus({ type: "error", message: "Passwords do not match." });
+      return;
+    }
+
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setBusy(false);
+
+    if (error) {
+      setStatus({ type: "error", message: error.message || "Could not update password." });
+    } else {
+      setStatus({ type: "success", message: "Password updated." });
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  };
+
+  return (
+    <div style={{ background: "white", borderRadius: 16, padding: 18, marginBottom: 16 }}>
+      <p style={{ margin: "0 0 10px", fontFamily: "sans-serif", fontSize: 13, fontWeight: 700 }}>
+        Set or Change Password
+      </p>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="password"
+          placeholder="New password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          style={{
+            display: "block",
+            width: "100%",
+            boxSizing: "border-box",
+            border: `1px solid ${PALETTE.blush}`,
+            borderRadius: 8,
+            padding: "8px 10px",
+            fontSize: 13,
+            fontFamily: "sans-serif",
+            marginBottom: 8
+          }}
+        />
+        <input
+          type="password"
+          placeholder="Confirm new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          style={{
+            display: "block",
+            width: "100%",
+            boxSizing: "border-box",
+            border: `1px solid ${PALETTE.blush}`,
+            borderRadius: 8,
+            padding: "8px 10px",
+            fontSize: 13,
+            fontFamily: "sans-serif",
+            marginBottom: 10
+          }}
+        />
+        {status && (
+          <p style={{
+            margin: "0 0 10px",
+            fontFamily: "sans-serif",
+            fontSize: 12,
+            color: status.type === "success" ? PALETTE.teal : PALETTE.rose
+          }}>
+            {status.message}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={busy}
+          style={{
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 14px",
+            fontSize: 13,
+            fontFamily: "sans-serif",
+            fontWeight: 700,
+            color: "white",
+            background: PALETTE.teal,
+            cursor: "pointer",
+            opacity: busy ? 0.6 : 1
+          }}
+        >
+          {busy ? "Updating..." : "Update Password"}
+        </button>
+      </form>
+    </div>
+  );
 }
 
 export function LandingPage() {
@@ -176,16 +281,28 @@ export function LandingPage() {
   </button>
 </div>
 
+<SetPasswordSection />
+
 <button
+
   onClick={signOut}
+
   style={{
+
     border: "1px solid #f0c8c0",
+
     background: "none",
+
     color: PALETTE.rose,
+
     borderRadius: 8,
+
   }}
+
 >
+
   Sign Out
+
 </button>
         </div>
       )}
