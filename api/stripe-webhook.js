@@ -69,10 +69,10 @@ export default async function handler(req, res) {
       }
 
       case "customer.subscription.updated":
-      case "customer.subscription.created": {
-        const subscription = event.data.object;
-        const userId = subscription.metadata?.supabase_user_id;
-
+case "customer.subscription.created": {
+  const subscription = await stripe.subscriptions.retrieve(event.data.object.id);
+  const userId = subscription.metadata?.supabase_user_id;
+  
         if (userId) {
           await upsertSubscription({ userId, customerId: subscription.customer, subscription });
         } else {
